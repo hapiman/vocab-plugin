@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Vocab Learner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      width: 240px;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 15px;
+      color: #cba6f7;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .stat-card {
+      background: #313244;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 24px;
+      font-weight: 700;
+      display: block;
+    }
+    .stat-num.learning { color: #89b4fa; }
+    .stat-num.mastered { color: #a6e3a1; }
+    .stat-label {
+      font-size: 11px;
+      color: #6c7086;
+      margin-top: 2px;
+    }
+    .divider { border: none; border-top: 1px solid #313244; margin: 10px 0; }
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 12px;
+      background: #313244;
+      border: none;
+      border-radius: 7px;
+      color: #cdd6f4;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      margin-bottom: 6px;
+      transition: background 0.12s;
+    }
+    .btn:hover { background: #45475a; }
+    .btn:last-child { margin-bottom: 0; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+    .toggle-label { font-size: 13px; color: #a6adc8; }
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #45475a;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    input:checked + .slider { background: #cba6f7; }
+    input:checked + .slider::before { transform: translateX(16px); }
+  </style>
+</head>
+<body>
+  <h1>📚 Vocab Learner</h1>
+
+  <div class="stats">
+    <div class="stat-card">
+      <span class="stat-num learning" id="learningCount">-</span>
+      <div class="stat-label">学习中</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num mastered" id="masteredCount">-</span>
+      <div class="stat-label">已掌握</div>
+    </div>
+  </div>
+
+  <div class="toggle-row">
+    <span class="toggle-label">标记功能</span>
+    <label class="toggle">
+      <input type="checkbox" id="enableToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <hr class="divider">
+
+  <button class="btn" id="vocabBtn">📖 生词本与统计</button>
+  <button class="btn" id="settingsBtn">⚙️ 设置 API Key / Gist</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
