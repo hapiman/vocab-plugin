@@ -126,6 +126,11 @@ function renderPagination(total, totalPages) {
   });
 }
 
+function localDateStr(d) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 function renderStats() {
   const chart = document.getElementById('trendChart');
   const days = 14;
@@ -135,11 +140,12 @@ function renderStats() {
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    counts[d.toISOString().slice(0, 10)] = 0;
+    counts[localDateStr(d)] = 0;
   }
 
   Object.values(allWords).forEach(w => {
-    const date = w.firstSeen;
+    // firstSeen 格式为 "2026-04-17 10:30"，取前 10 位得到日期部分
+    const date = (w.firstSeen || '').slice(0, 10);
     if (date && counts[date] !== undefined) counts[date]++;
   });
 
