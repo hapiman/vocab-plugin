@@ -41,6 +41,8 @@
     document.addEventListener('click', onDocClick, true);
     // 选中文字后弹出查词菜单
     document.addEventListener('mouseup', onSelectionEnd);
+    // 双击单词直接弹出释义
+    document.addEventListener('dblclick', onDblClickWord);
   }
 
   // ── DOM 处理 ───────────────────────────────────────────────────────────
@@ -150,15 +152,23 @@
 
   // ── 鼠标事件 ───────────────────────────────────────────────────────────
 
+  let wordClickTimer = null;
+
   function onWordClick(e) {
     e.stopPropagation();
     const span = e.currentTarget;
-    if (activeSpan === span && popupEl) {
-      removePopup();
-      return;
-    }
-    removeSelectionIcon();
-    showPopup(span);
+
+    // 延迟执行，给 dblclick 机会取消
+    if (wordClickTimer) { clearTimeout(wordClickTimer); wordClickTimer = null; }
+    wordClickTimer = setTimeout(() => {
+      wordClickTimer = null;
+      if (activeSpan === span && popupEl) {
+        removePopup();
+        return;
+      }
+      removeSelectionIcon();
+      showPopup(span);
+    }, 200);
   }
 
   // ── 选中图标 ───────────────────────────────────────────────────────────
@@ -409,6 +419,42 @@
     if (!sample) return false;
     const nonAscii = (sample.match(/[^\x00-\x7F]/g) || []).length;
     return nonAscii / sample.length < 0.1;
+  }
+
+  function onDblClickWord(e) {
+    // 取消单击延迟，防止闪烁
+    if (wordClickTimer) { clearTimeout(wordClickTimer); wordClickTimer = null; }
+
+    // 不干扰弹窗内部交互
+    if (popupEl && popupEl.contains(e.target)) return;
+    if (selectionIconEl && selectionIconEl.contains(e.target)) return;
+
+    const selection = window.getSelection();
+    const selectedText = selection?.toString().trim();
+    if (!selectedText) return;
+
+    // 只处理单个英文单词
+    if (!/^[a-zA-Z][a-zA-Z'-]{1,29}$/.test(selectedText)) return;
+
+    const normalizedWord = selectedText.toLowerCase();
+
+    let rect;
+    try {
+      rect = selection.getRangeAt(0).getBoundingClientRect();
+    } catch { return; }
+    if (!rect || rect.width === 0) return;
+
+    // 提取所在句子作为上下文
+    const anchorText = (selection?.anchorNode?.textContent || '').trim();
+    const context = {
+      sentence: extractSentenceAround(anchorText, normalizedWord),
+      url: location.href,
+      date: new Date().toISOString().slice(0, 10),
+    };
+
+    removeSelectionIcon();
+    removePopup();
+    showSelectionPopup(normalizedWord, rect, context);
   }
 
   function onSelectionEnd(e) {
