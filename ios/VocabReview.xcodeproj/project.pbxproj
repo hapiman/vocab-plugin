@@ -1,0 +1,446 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		100000000000000000000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* AppDelegate.swift */; };
+		100000000000000000000002 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* SceneDelegate.swift */; };
+		100000000000000000000003 /* JSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* JSONValue.swift */; };
+		100000000000000000000004 /* VocabContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* VocabContext.swift */; };
+		100000000000000000000005 /* VocabWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000005 /* VocabWord.swift */; };
+		100000000000000000000006 /* DateCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000006 /* DateCoding.swift */; };
+		100000000000000000000007 /* ReviewScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* ReviewScheduler.swift */; };
+		100000000000000000000008 /* LocalCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000008 /* LocalCache.swift */; };
+		100000000000000000000009 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000009 /* KeychainStore.swift */; };
+		10000000000000000000000A /* GistClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* GistClient.swift */; };
+		10000000000000000000000B /* VocabMergeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* VocabMergeService.swift */; };
+		10000000000000000000000C /* VocabStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* VocabStore.swift */; };
+		10000000000000000000000D /* StatSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000D /* StatSummaryView.swift */; };
+		10000000000000000000000E /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000E /* EmptyStateView.swift */; };
+		10000000000000000000000F /* ReviewCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* ReviewCardView.swift */; };
+		100000000000000000000010 /* RootTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* RootTabBarController.swift */; };
+		100000000000000000000011 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* HomeViewController.swift */; };
+		100000000000000000000012 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* ReviewViewController.swift */; };
+		100000000000000000000013 /* VocabularyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* VocabularyViewController.swift */; };
+		100000000000000000000014 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* SettingsViewController.swift */; };
+		100000000000000000000015 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000015 /* Assets.xcassets */; };
+		100000000000000000000016 /* WordDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000018 /* WordDetailViewController.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		200000000000000000000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		200000000000000000000002 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		200000000000000000000003 /* JSONValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONValue.swift; sourceTree = "<group>"; };
+		200000000000000000000004 /* VocabContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabContext.swift; sourceTree = "<group>"; };
+		200000000000000000000005 /* VocabWord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabWord.swift; sourceTree = "<group>"; };
+		200000000000000000000006 /* DateCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateCoding.swift; sourceTree = "<group>"; };
+		200000000000000000000007 /* ReviewScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewScheduler.swift; sourceTree = "<group>"; };
+		200000000000000000000008 /* LocalCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCache.swift; sourceTree = "<group>"; };
+		200000000000000000000009 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		20000000000000000000000A /* GistClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GistClient.swift; sourceTree = "<group>"; };
+		20000000000000000000000B /* VocabMergeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabMergeService.swift; sourceTree = "<group>"; };
+		20000000000000000000000C /* VocabStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabStore.swift; sourceTree = "<group>"; };
+		20000000000000000000000D /* StatSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatSummaryView.swift; sourceTree = "<group>"; };
+		20000000000000000000000E /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		20000000000000000000000F /* ReviewCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewCardView.swift; sourceTree = "<group>"; };
+		200000000000000000000010 /* RootTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabBarController.swift; sourceTree = "<group>"; };
+		200000000000000000000011 /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
+		200000000000000000000012 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
+		200000000000000000000013 /* VocabularyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabularyViewController.swift; sourceTree = "<group>"; };
+		200000000000000000000014 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		200000000000000000000015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		200000000000000000000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		200000000000000000000017 /* VocabReview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VocabReview.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		200000000000000000000018 /* WordDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordDetailViewController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		300000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		400000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				400000000000000000000002 /* VocabReview */,
+				400000000000000000000008 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		400000000000000000000002 /* VocabReview */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000001 /* AppDelegate.swift */,
+				200000000000000000000002 /* SceneDelegate.swift */,
+				200000000000000000000016 /* Info.plist */,
+				400000000000000000000003 /* Models */,
+				400000000000000000000004 /* Services */,
+				400000000000000000000005 /* ViewControllers */,
+				400000000000000000000006 /* Views */,
+				400000000000000000000007 /* Resources */,
+			);
+			path = VocabReview;
+			sourceTree = "<group>";
+		};
+		400000000000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000003 /* JSONValue.swift */,
+				200000000000000000000004 /* VocabContext.swift */,
+				200000000000000000000005 /* VocabWord.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		400000000000000000000004 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000006 /* DateCoding.swift */,
+				200000000000000000000007 /* ReviewScheduler.swift */,
+				200000000000000000000008 /* LocalCache.swift */,
+				200000000000000000000009 /* KeychainStore.swift */,
+				20000000000000000000000A /* GistClient.swift */,
+				20000000000000000000000B /* VocabMergeService.swift */,
+				20000000000000000000000C /* VocabStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		400000000000000000000005 /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000010 /* RootTabBarController.swift */,
+				200000000000000000000011 /* HomeViewController.swift */,
+				200000000000000000000012 /* ReviewViewController.swift */,
+				200000000000000000000013 /* VocabularyViewController.swift */,
+				200000000000000000000018 /* WordDetailViewController.swift */,
+				200000000000000000000014 /* SettingsViewController.swift */,
+			);
+			path = ViewControllers;
+			sourceTree = "<group>";
+		};
+		400000000000000000000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				20000000000000000000000D /* StatSummaryView.swift */,
+				20000000000000000000000E /* EmptyStateView.swift */,
+				20000000000000000000000F /* ReviewCardView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		400000000000000000000007 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000015 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		400000000000000000000008 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000017 /* VocabReview.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		500000000000000000000001 /* VocabReview */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 900000000000000000000002 /* Build configuration list for PBXNativeTarget "VocabReview" */;
+			buildPhases = (
+				600000000000000000000001 /* Sources */,
+				300000000000000000000001 /* Frameworks */,
+				700000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VocabReview;
+			productName = VocabReview;
+			productReference = 200000000000000000000017 /* VocabReview.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		800000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					500000000000000000000001 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = 900000000000000000000001 /* Build configuration list for PBXProject "VocabReview" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 400000000000000000000001;
+			productRefGroup = 400000000000000000000008 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				500000000000000000000001 /* VocabReview */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		700000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000015 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		600000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000001 /* AppDelegate.swift in Sources */,
+				100000000000000000000002 /* SceneDelegate.swift in Sources */,
+				100000000000000000000003 /* JSONValue.swift in Sources */,
+				100000000000000000000004 /* VocabContext.swift in Sources */,
+				100000000000000000000005 /* VocabWord.swift in Sources */,
+				100000000000000000000006 /* DateCoding.swift in Sources */,
+				100000000000000000000007 /* ReviewScheduler.swift in Sources */,
+				100000000000000000000008 /* LocalCache.swift in Sources */,
+				100000000000000000000009 /* KeychainStore.swift in Sources */,
+				10000000000000000000000A /* GistClient.swift in Sources */,
+				10000000000000000000000B /* VocabMergeService.swift in Sources */,
+				10000000000000000000000C /* VocabStore.swift in Sources */,
+				10000000000000000000000D /* StatSummaryView.swift in Sources */,
+				10000000000000000000000E /* EmptyStateView.swift in Sources */,
+				10000000000000000000000F /* ReviewCardView.swift in Sources */,
+				100000000000000000000010 /* RootTabBarController.swift in Sources */,
+				100000000000000000000011 /* HomeViewController.swift in Sources */,
+				100000000000000000000012 /* ReviewViewController.swift in Sources */,
+				100000000000000000000013 /* VocabularyViewController.swift in Sources */,
+				100000000000000000000016 /* WordDetailViewController.swift in Sources */,
+				100000000000000000000014 /* SettingsViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		900000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		900000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		900000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = VocabReview/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VocabReview;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.local.VocabReview;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		900000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = VocabReview/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VocabReview;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.local.VocabReview;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		900000000000000000000001 /* Build configuration list for PBXProject "VocabReview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				900000000000000000000003 /* Debug */,
+				900000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		900000000000000000000002 /* Build configuration list for PBXNativeTarget "VocabReview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				900000000000000000000005 /* Debug */,
+				900000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 800000000000000000000001 /* Project object */;
+}

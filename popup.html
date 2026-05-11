@@ -61,42 +61,27 @@
       margin-bottom: 6px;
       transition: background 0.12s;
     }
+    .btn-label { flex: 1; }
+    .btn-pill {
+      min-width: 22px;
+      padding: 1px 7px;
+      border-radius: 20px;
+      background: #45475a;
+      color: #cba6f7;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
     .btn:hover { background: #45475a; }
     .btn:last-child { margin-bottom: 0; }
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0;
+    .sync-status {
+      min-height: 16px;
+      margin: -2px 0 10px;
+      color: #6c7086;
+      font-size: 11px;
+      line-height: 1.35;
     }
-    .toggle-label { font-size: 13px; color: #a6adc8; }
-    .toggle {
-      position: relative;
-      width: 36px;
-      height: 20px;
-    }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute;
-      inset: 0;
-      background: #45475a;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .slider::before {
-      content: '';
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      left: 3px;
-      top: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.2s;
-    }
-    input:checked + .slider { background: #cba6f7; }
-    input:checked + .slider::before { transform: translateX(16px); }
+    .sync-status.error { color: #f38ba8; }
   </style>
 </head>
 <body>
@@ -113,16 +98,14 @@
     </div>
   </div>
 
-  <div class="toggle-row">
-    <span class="toggle-label">标记功能</span>
-    <label class="toggle">
-      <input type="checkbox" id="enableToggle" checked>
-      <span class="slider"></span>
-    </label>
-  </div>
+  <div class="sync-status" id="syncStatus"></div>
 
   <hr class="divider">
 
+  <button class="btn" id="reviewBtn">
+    <span class="btn-label">🧠 开始复习</span>
+    <span class="btn-pill" id="reviewDueCount">-</span>
+  </button>
   <button class="btn" id="vocabBtn">📖 生词本与统计</button>
   <button class="btn" id="settingsBtn">⚙️ 设置 API Key / Gist</button>
 

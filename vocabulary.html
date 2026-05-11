@@ -76,7 +76,8 @@
       border: 1px solid #e8e8ec;
       border-radius: 10px;
       padding: 14px 16px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) minmax(96px, auto);
       gap: 14px;
       align-items: flex-start;
       transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
@@ -98,10 +99,22 @@
       line-height: 1;
     }
     .word-main { flex: 1; min-width: 0; }
-    .word-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+    .word-header {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px 8px;
+      margin-bottom: 4px;
+      min-width: 0;
+    }
     .word-text { font-size: 17px; font-weight: 600; color: #7c3aed; }
     .word-phonetic { font-size: 12px; color: #aaa; }
-    .word-def { font-size: 13px; color: #444; margin-bottom: 6px; }
+    .word-def {
+      font-size: 13px;
+      color: #444;
+      margin-bottom: 6px;
+      overflow-wrap: anywhere;
+    }
     .word-contexts { display: flex; flex-direction: column; gap: 4px; }
     .word-context {
       font-size: 12px;
@@ -109,9 +122,9 @@
       font-style: italic;
       border-left: 2px solid #d1d5db;
       padding-left: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.6;
     }
     .word-context-url {
       display: inline-block;
@@ -126,8 +139,15 @@
     .word-context-url:hover { opacity: 1; text-decoration: underline; }
     .word-highlight { background: none; color: #7c3aed; font-weight: 700; font-style: normal; }
     .word-meta { font-size: 11px; color: #bbb; margin-top: 6px; }
-    .word-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+    .word-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 96px;
+      justify-self: end;
+    }
     .action-btn {
+      width: 100%;
       padding: 5px 10px;
       border: none;
       border-radius: 5px;
@@ -192,6 +212,43 @@
     .chart-bar-bg { flex: 1; background: #e8e8ec; border-radius: 3px; height: 10px; overflow: hidden; }
     .chart-bar { height: 100%; border-radius: 3px; background: #7c3aed; transition: width 0.4s; }
     .chart-count { font-size: 12px; color: #999; width: 30px; }
+
+    @media (max-width: 720px) {
+      .header {
+        align-items: stretch;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 14px;
+      }
+      .search {
+        order: 3;
+        max-width: none;
+        min-width: 100%;
+      }
+      .tabs {
+        margin-left: 0;
+      }
+      .word-list {
+        padding: 12px 14px;
+      }
+      .word-card {
+        grid-template-columns: 24px minmax(0, 1fr);
+      }
+      .word-actions {
+        grid-column: 2;
+        width: 100%;
+        flex-direction: row;
+        justify-self: stretch;
+      }
+      .action-btn {
+        flex: 1;
+        min-height: 30px;
+      }
+      .pagination {
+        flex-wrap: wrap;
+        padding: 12px 14px 20px;
+      }
+    }
   </style>
 </head>
 <body>

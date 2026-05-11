@@ -1,21 +1,49 @@
 async function init() {
-  // 加载统计
-  const stats = await chrome.runtime.sendMessage({ type: 'GET_STATS' });
-  document.getElementById('learningCount').textContent = stats.learning;
-  document.getElementById('masteredCount').textContent = stats.mastered;
+  await loadStats();
 
-  // 加载启用状态
-  const { enabled = true } = await chrome.storage.local.get('enabled');
-  document.getElementById('enableToggle').checked = enabled;
+  // 打开插件弹窗时拉取一次 Gist，确保 iOS 端的复习进度同步回浏览器。
+  setSyncStatus('同步 Gist 中...');
+  try {
+    const result = await chrome.runtime.sendMessage({ type: 'PULL_GIST' });
+    if (result?.stats) renderStats(result.stats);
+    if (result?.ok) {
+      setSyncStatus(`已同步 ${formatTime(result.lastGistSync)}`);
+    } else {
+      setSyncStatus(`同步失败：${result?.error || '未知错误'}`, true);
+    }
+  } catch (e) {
+    console.warn('[VocabLearner] popup gist refresh failed:', e);
+    setSyncStatus(`同步失败：${e.message || '未知错误'}`, true);
+  }
 }
 
-document.getElementById('enableToggle').addEventListener('change', async (e) => {
-  await chrome.storage.local.set({ enabled: e.target.checked });
-  // 通知当前标签页刷新
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab?.id) {
-    chrome.tabs.reload(tab.id);
-  }
+async function loadStats() {
+  const stats = await chrome.runtime.sendMessage({ type: 'GET_STATS' });
+  renderStats(stats);
+}
+
+function renderStats(stats) {
+  document.getElementById('learningCount').textContent = stats.learning;
+  document.getElementById('masteredCount').textContent = stats.mastered;
+  document.getElementById('reviewDueCount').textContent = stats.reviewDue ?? 0;
+}
+
+function setSyncStatus(text, isError = false) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = text;
+  el.classList.toggle('error', isError);
+}
+
+function formatTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${p(date.getHours())}:${p(date.getMinutes())}`;
+}
+
+document.getElementById('reviewBtn').addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('review.html') });
 });
 
 document.getElementById('vocabBtn').addEventListener('click', () => {

@@ -1,1 +1,6 @@
 .claude/
+.DS_Store
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate

@@ -8,6 +8,7 @@ A Chrome extension for learning English vocabulary while browsing — AI-powered
 - **Click to look up** — click any underlined word to see its definition and example sentence
 - **Select to translate** — select any English text to get an AI translation with key phrase breakdown
 - **One-click save** — add words or phrases to your vocabulary list from any popup
+- **Spaced review** — review due words with “forgot / unsure / remembered” scheduling
 - **Vocabulary page** — review all saved words with definitions, example sentences, and source URLs
 - **GitHub Gist sync** — your word list is automatically synced to a private GitHub Gist
 
@@ -75,6 +76,7 @@ To use the same vocabulary on another device:
 | Translate a sentence | Select the text → click the **译** icon |
 | Save a word | Click **📌 生词本** in any popup |
 | Mark as mastered | Click **✓ 已掌握** in any popup |
+| Review due words | Click the extension icon → **🧠 开始复习** |
 | Review vocabulary | Click the extension icon → **📚 生词本** |
 
 ---

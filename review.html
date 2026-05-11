@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>复习 - Vocab Learner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+    }
+    button {
+      font: inherit;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-height: 62px;
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.92);
+      border-bottom: 1px solid #e0e0e5;
+      backdrop-filter: blur(12px);
+    }
+    .topbar h1 {
+      font-size: 18px;
+      color: #6d28d9;
+      white-space: nowrap;
+    }
+    .top-metrics {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .metric {
+      min-width: 92px;
+      padding: 6px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .metric-value {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.1;
+    }
+    .metric-label {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+    .shell {
+      display: grid;
+      align-items: start;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px 24px 24px;
+    }
+    .review-panel,
+    .queue-panel,
+    .summary-panel {
+      background: #fff;
+      border: 1px solid #e8e8ec;
+      border-radius: 8px;
+    }
+    .review-panel {
+      min-height: 620px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    .review-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid #ececf1;
+    }
+    .progress-wrap {
+      flex: 1;
+      min-width: 180px;
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .progress-track {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e8e8ec;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: #6d28d9;
+      transition: width 0.2s ease;
+    }
+    .mode-switch {
+      display: inline-flex;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 8px;
+      background: #f0f0f5;
+      flex-shrink: 0;
+    }
+    .mode-switch button {
+      min-width: 58px;
+      padding: 5px 9px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #6b7280;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .mode-switch button.active {
+      background: #fff;
+      color: #6d28d9;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .review-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 34px clamp(22px, 5vw, 58px);
+    }
+    .word-row {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .word {
+      font-size: 42px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #111827;
+    }
+    .phonetic {
+      font-size: 15px;
+      color: #9ca3af;
+    }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 28px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+    .tag.due { color: #b45309; background: #fffbeb; border: 1px solid #fde68a; }
+    .tag.level { color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; }
+    .tag.source { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; }
+    .tag-link {
+      cursor: pointer;
+      font: inherit;
+    }
+    .tag-link:hover:not(:disabled) {
+      text-decoration: underline;
+    }
+    .tag-link:disabled {
+      cursor: default;
+      opacity: 0.8;
+    }
+    .prompt {
+      max-width: 720px;
+      font-size: 16px;
+      color: #4b5563;
+      line-height: 1.75;
+    }
+    .empty-state {
+      display: none;
+      max-width: 520px;
+      margin: 0 auto;
+      color: #6b7280;
+      text-align: center;
+      line-height: 1.7;
+    }
+    .empty-state.visible {
+      display: block;
+    }
+    .empty-state h2 {
+      margin-bottom: 8px;
+      color: #111827;
+      font-size: 22px;
+    }
+    .context {
+      margin-top: 22px;
+      padding-left: 12px;
+      border-left: 3px solid #d1d5db;
+      color: #4b5563;
+      font-size: 14px;
+      font-style: italic;
+      line-height: 1.7;
+    }
+    .answer {
+      display: none;
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid #ececf1;
+    }
+    .answer.visible {
+      display: block;
+    }
+    .answer-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 0.6fr);
+      gap: 18px;
+    }
+    .answer h2,
+    .notes h2,
+    .queue-panel h2,
+    .summary-panel h2 {
+      margin-bottom: 9px;
+      font-size: 13px;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .definition {
+      font-size: 17px;
+      line-height: 1.65;
+      color: #1f2937;
+    }
+    .example-zh {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .notes-list {
+      display: grid;
+      gap: 7px;
+      color: #374151;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .note-item {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+    .note-item strong {
+      color: #6d28d9;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .review-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-top: 1px solid #ececf1;
+    }
+    .secondary-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .action {
+      min-height: 36px;
+      padding: 7px 14px;
+      border: 1px solid #dcdce0;
+      border-radius: 7px;
+      background: #fff;
+      color: #374151;
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s, background 0.12s;
+    }
+    .action:hover {
+      border-color: #9ca3af;
+      background: #f9fafb;
+    }
+    .primary {
+      min-width: 120px;
+      border-color: #6d28d9;
+      background: #6d28d9;
+      color: #fff;
+    }
+    .primary:hover {
+      border-color: #5b21b6;
+      background: #5b21b6;
+    }
+    .rating-actions {
+      display: none;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .rating-actions.visible {
+      display: flex;
+    }
+    .rating {
+      min-width: 86px;
+      min-height: 36px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .rating.miss {
+      color: #be123c;
+      background: #fff1f2;
+      border-color: #fecdd3;
+    }
+    .rating.hard {
+      color: #b45309;
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+    .rating.good {
+      color: #047857;
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+    }
+    .side {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .queue-panel,
+    .summary-panel {
+      padding: 15px;
+    }
+    .queue-search {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 7px 10px;
+      border: 1px solid #dcdce0;
+      border-radius: 7px;
+      background: #f9fafb;
+      color: #1f2937;
+      font-size: 13px;
+      outline: none;
+    }
+    .queue-search:focus {
+      border-color: #6d28d9;
+      background: #fff;
+    }
+    .queue-list {
+      display: grid;
+      gap: 8px;
+      min-height: 384px;
+    }
+    .queue-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 41px;
+      padding: 9px 10px;
+      border: 1px solid #ececf1;
+      border-radius: 7px;
+      background: #fff;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+    }
+    .queue-item:hover {
+      border-color: #c4b5fd;
+    }
+    .queue-item.active {
+      border-color: #c4b5fd;
+      background: #faf5ff;
+    }
+    .queue-word {
+      overflow: hidden;
+      color: #1f2937;
+      font-size: 14px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .queue-time {
+      font-size: 11px;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+    .queue-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #ececf1;
+    }
+    .queue-page-btn {
+      min-height: 28px;
+      padding: 4px 9px;
+      border: 1px solid #dcdce0;
+      border-radius: 6px;
+      background: #fff;
+      color: #4b5563;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .queue-page-btn:hover:not(:disabled) {
+      border-color: #6d28d9;
+      color: #6d28d9;
+    }
+    .queue-page-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .queue-page-info {
+      color: #6b7280;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .plan-list {
+      display: grid;
+      gap: 9px;
+    }
+    .plan-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #4b5563;
+      font-size: 13px;
+    }
+    .plan-count {
+      min-width: 32px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #f0f0f5;
+      color: #374151;
+      text-align: center;
+      font-size: 12px;
+    }
+    .toast {
+      min-height: 26px;
+      padding-top: 8px;
+      color: #6d28d9;
+      font-size: 12px;
+    }
+    @media (max-width: 900px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .top-metrics {
+        width: 100%;
+        margin-left: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .metric {
+        min-width: 0;
+      }
+      .shell {
+        grid-template-columns: 1fr;
+      }
+      .review-panel {
+        min-height: 560px;
+      }
+    }
+    @media (max-width: 620px) {
+      .topbar {
+        padding: 12px 14px;
+      }
+      .shell {
+        padding: 12px 14px 18px;
+      }
+      .review-header,
+      .review-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .mode-switch,
+      .secondary-actions,
+      .rating-actions,
+      .primary {
+        width: 100%;
+      }
+      .mode-switch button,
+      .secondary-actions .action,
+      .rating,
+      .primary {
+        flex: 1;
+      }
+      .answer-grid {
+        grid-template-columns: 1fr;
+      }
+      .word {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>复习</h1>
+    <div class="top-metrics">
+      <div class="metric">
+        <span class="metric-value" id="dueCount">-</span>
+        <span class="metric-label">当前待复习</span>
+      </div>
+      <div class="metric">
+        <span class="metric-value" id="doneCount">-</span>
+        <span class="metric-label">已完成</span>
+      </div>
+      <div class="metric">
+        <span class="metric-value" id="accuracy">-</span>
+        <span class="metric-label">记住率</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="review-panel" aria-label="复习卡片">
+      <div class="review-header">
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span id="progressText">加载中</span>
+            <span id="nextDueText">答完后会安排下次复习</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+        </div>
+        <div class="mode-switch" aria-label="复习模式" id="modeSwitch">
+          <button class="active" type="button" data-mode="card">卡片</button>
+          <button type="button" data-mode="sentence">例句</button>
+        </div>
+      </div>
+
+      <div class="review-body">
+        <div class="word-row">
+          <div class="word" id="wordText"></div>
+          <div class="phonetic" id="phoneticText"></div>
+        </div>
+        <div class="tag-row">
+          <span class="tag due" id="dueTag"></span>
+          <span class="tag level" id="levelTag"></span>
+          <button class="tag source tag-link" id="sourceTag" type="button"></button>
+        </div>
+        <p class="prompt" id="promptText">先在脑子里回忆这个词的含义，再显示答案。</p>
+        <div class="context" id="contextText"></div>
+
+        <div class="answer" id="answerBlock">
+          <div class="answer-grid">
+            <div>
+              <h2>释义</h2>
+              <div class="definition" id="definitionText"></div>
+              <div class="example-zh" id="exampleZh"></div>
+            </div>
+            <div class="notes">
+              <h2>上下文</h2>
+              <div class="notes-list" id="notesList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+          <h2 id="emptyTitle">今天没有待复习词</h2>
+          <p id="emptyMessage">新增或重新学习的词会自动进入复习队列。旧词如果还没有复习时间，会在第一次打开时被视为今天到期。</p>
+        </div>
+      </div>
+
+      <div class="review-actions">
+        <div class="secondary-actions">
+          <button class="action" type="button" id="skipBtn">稍后</button>
+          <button class="action" type="button" id="masterBtn">已掌握</button>
+        </div>
+        <button class="action primary" type="button" id="showBtn">显示答案</button>
+        <div class="rating-actions" id="ratingActions">
+          <button class="rating miss" type="button" data-score="miss">忘了</button>
+          <button class="rating hard" type="button" data-score="hard">模糊</button>
+          <button class="rating good" type="button" data-score="good">记住了</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="queue-panel" aria-label="待复习队列">
+        <h2>队列</h2>
+        <input class="queue-search" id="queueSearch" type="search" placeholder="搜索学习中的词..." />
+        <div class="queue-list" id="queueList"></div>
+        <div class="queue-pagination" id="queuePagination">
+          <button class="queue-page-btn" type="button" id="queuePrev">上一页</button>
+          <span class="queue-page-info" id="queuePageInfo">第 1 / 1 页</span>
+          <button class="queue-page-btn" type="button" id="queueNext">下一页</button>
+        </div>
+        <div class="toast" id="toast"></div>
+      </section>
+
+      <section class="summary-panel" aria-label="复习安排">
+        <h2>复习安排</h2>
+        <div class="plan-list">
+          <div class="plan-row"><span>今天</span><span class="plan-count" id="planToday">-</span></div>
+          <div class="plan-row"><span>明天</span><span class="plan-count" id="planTomorrow">-</span></div>
+          <div class="plan-row"><span>本周</span><span class="plan-count" id="planWeek">-</span></div>
+          <div class="plan-row"><span>已稳定掌握</span><span class="plan-count" id="planStable">-</span></div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <script src="review.js"></script>
+</body>
+</html>

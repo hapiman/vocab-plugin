@@ -33,14 +33,14 @@ function scheduleGistSync() {
 
 async function syncToGist() {
   const { githubToken, gistId, words } = await chrome.storage.local.get(['githubToken', 'gistId', 'words']);
-  if (!githubToken) return;
+  if (!githubToken) return { ok: false, error: 'missing github token' };
 
   const content = JSON.stringify(words || {}, null, 2);
 
   try {
     if (gistId) {
       // 更新已有 Gist
-      await fetch(`https://api.github.com/gists/${gistId}`, {
+      const res = await fetch(`https://api.github.com/gists/${gistId}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${githubToken}`,
@@ -50,6 +50,7 @@ async function syncToGist() {
           files: { 'vocab-learner.json': { content } }
         })
       });
+      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
     } else {
       // 创建新 Gist
       const res = await fetch('https://api.github.com/gists', {
@@ -64,31 +65,95 @@ async function syncToGist() {
           files: { 'vocab-learner.json': { content } }
         })
       });
+      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
       const data = await res.json();
       await chrome.storage.local.set({ gistId: data.id });
     }
     await chrome.storage.local.set({ lastGistSync: new Date().toISOString() });
+    return { ok: true };
   } catch (e) {
     console.error('Gist sync failed:', e);
+    return { ok: false, error: e.message };
   }
 }
 
-async function pullFromGist() {
-  const { githubToken, gistId } = await chrome.storage.local.get(['githubToken', 'gistId']);
-  if (!githubToken || !gistId) return;
+function statsFromWords(wordMap) {
+  const map = wordMap || {};
+  const learning = Object.values(map).filter(w => w.status === 'learning').length;
+  const mastered = Object.values(map).filter(w => w.status === 'mastered').length;
+  return { learning, mastered, total: learning + mastered, reviewDue: reviewDueCount(map) };
+}
+
+function mergeContexts(remoteContexts, localContexts) {
+  const result = Array.isArray(remoteContexts) ? [...remoteContexts] : [];
+  const seen = new Set(result.map(c => `${c?.sentence || ''}\n${c?.url || ''}`));
+
+  for (const context of Array.isArray(localContexts) ? localContexts : []) {
+    const key = `${context?.sentence || ''}\n${context?.url || ''}`;
+    if (!seen.has(key)) {
+      result.push(context);
+      seen.add(key);
+    }
+  }
+
+  return result.slice(-5);
+}
+
+function mergePulledWords(remoteWords, localWords) {
+  const merged = { ...(remoteWords || {}) };
+
+  for (const [word, localInfo] of Object.entries(localWords || {})) {
+    const remoteInfo = merged[word];
+    if (!remoteInfo) {
+      merged[word] = localInfo;
+      continue;
+    }
+
+    // 远端可能包含 iOS 刚写入的复习字段；本地只补充浏览器端可能新增的释义和例句。
+    merged[word] = {
+      ...remoteInfo,
+      firstSeen: remoteInfo.firstSeen || localInfo.firstSeen,
+      contexts: mergeContexts(remoteInfo.contexts, localInfo.contexts),
+      definition: remoteInfo.definition || localInfo.definition || '',
+      phonetic: remoteInfo.phonetic || localInfo.phonetic || '',
+    };
+  }
+
+  return merged;
+}
+
+async function pullFromGist(options = {}) {
+  const { preserveLocal = true } = options;
+  const { githubToken, gistId, words: localWords } = await chrome.storage.local.get(['githubToken', 'gistId', 'words']);
+  if (!githubToken || !gistId) {
+    return { ok: false, error: '请先在设置页填写 GitHub Token 和 Gist ID', stats: statsFromWords(localWords) };
+  }
 
   try {
-    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-      headers: { 'Authorization': `Bearer ${githubToken}` }
+    const res = await fetch(`https://api.github.com/gists/${gistId}?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Authorization': `Bearer ${githubToken}`,
+        'Cache-Control': 'no-cache',
+      }
     });
     const data = await res.json();
+    if (!res.ok) throw new Error(data.message || `GitHub API ${res.status}`);
+
     const content = data.files?.['vocab-learner.json']?.content;
-    if (content) {
-      const words = JSON.parse(content);
-      await chrome.storage.local.set({ words });
+    if (!content) {
+      return { ok: false, error: 'Gist 中没有 vocab-learner.json', stats: statsFromWords(localWords) };
     }
+
+    const remoteWords = JSON.parse(content);
+    const words = preserveLocal ? mergePulledWords(remoteWords, localWords || {}) : remoteWords;
+    const lastGistSync = new Date().toISOString();
+    await chrome.storage.local.set({ words, lastGistSync });
+    updateBadge(words);
+    return { ok: true, stats: statsFromWords(words), lastGistSync };
   } catch (e) {
     console.error('Gist pull failed:', e);
+    return { ok: false, error: e.message, stats: statsFromWords(localWords) };
   }
 }
 
@@ -213,6 +278,45 @@ function nowMinute() {
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+function addMinutes(date, minutes) {
+  return new Date(date.getTime() + minutes * 60 * 1000).toISOString();
+}
+
+function addDays(date, days) {
+  return addMinutes(date, days * 24 * 60);
+}
+
+function ensureReviewFields(info) {
+  if (!info || info.status !== 'learning') return info;
+  info.reviewCount = Number(info.reviewCount || 0);
+  info.correctCount = Number(info.correctCount || 0);
+  info.missCount = Number(info.missCount || 0);
+  info.intervalDays = Number(info.intervalDays || 0);
+  if (!info.dueAt) info.dueAt = new Date().toISOString();
+  return info;
+}
+
+function reviewDueCount(wordMap) {
+  const now = Date.now();
+  return Object.values(wordMap || {}).filter(w => {
+    if (w.status !== 'learning') return false;
+    if (!w.dueAt) return true;
+    const due = Date.parse(w.dueAt);
+    return Number.isNaN(due) || due <= now;
+  }).length;
+}
+
+function updateBadge(wordMap) {
+  const learningCount = Object.values(wordMap || {}).filter(w => w.status === 'learning').length;
+  chrome.action.setBadgeText({ text: learningCount > 0 ? String(learningCount) : '' });
+  chrome.action.setBadgeBackgroundColor({ color: '#f59e0b' });
+}
+
+function nextGoodIntervalDays(correctCount) {
+  const intervals = [1, 3, 7, 14, 30, 60, 120];
+  return intervals[Math.min(Math.max(correctCount - 1, 0), intervals.length - 1)];
+}
+
 async function markWord(word, status, context) {
   const wordMap = await serialWrite(async () => {
     const { words } = await chrome.storage.local.get('words');
@@ -230,9 +334,16 @@ async function markWord(word, status, context) {
         phonetic: pending?.phonetic || '',
       };
     } else {
+      const wasStatus = map[word].status;
       map[word].status = status;
       map[word].lastSeen = nowMinute();
+      if (status === 'learning' && wasStatus !== 'learning') {
+        map[word].dueAt = new Date().toISOString();
+      }
     }
+
+    ensureReviewFields(map[word]);
+    if (!Array.isArray(map[word].contexts)) map[word].contexts = [];
 
     if (context && map[word].contexts.length < 5) {
       const exists = map[word].contexts.some(c => c.sentence === context.sentence);
@@ -244,9 +355,7 @@ async function markWord(word, status, context) {
   });
 
   scheduleGistSync();
-  const learningCount = Object.values(wordMap).filter(w => w.status === 'learning').length;
-  chrome.action.setBadgeText({ text: learningCount > 0 ? String(learningCount) : '' });
-  chrome.action.setBadgeBackgroundColor({ color: '#f59e0b' });
+  updateBadge(wordMap);
 }
 
 async function saveDefinition(word, def) {
@@ -258,6 +367,71 @@ async function saveDefinition(word, def) {
     await chrome.storage.local.set({ words });
     return true;
   });
+}
+
+async function reviewWord(word, outcome) {
+  const allowedOutcomes = new Set(['miss', 'hard', 'good', 'skip', 'mastered']);
+  if (!allowedOutcomes.has(outcome)) {
+    return { ok: false, error: 'invalid outcome' };
+  }
+
+  const result = await serialWrite(async () => {
+    const { words } = await chrome.storage.local.get('words');
+    const wordMap = words || {};
+    const info = wordMap[word];
+    if (!info) return { ok: false, error: 'word not found', wordMap };
+
+    const now = new Date();
+    info.lastSeen = nowMinute();
+
+    if (outcome === 'mastered') {
+      info.status = 'mastered';
+      info.lastReviewed = now.toISOString();
+      wordMap[word] = info;
+      await chrome.storage.local.set({ words: wordMap });
+      return { ok: true, wordMap, nextDueText: '已掌握' };
+    }
+
+    info.status = 'learning';
+    ensureReviewFields(info);
+
+    if (outcome === 'skip') {
+      info.dueAt = addMinutes(now, 240);
+      wordMap[word] = info;
+      await chrome.storage.local.set({ words: wordMap });
+      return { ok: true, wordMap, nextDueText: '4 小时后' };
+    }
+
+    info.reviewCount = Number(info.reviewCount || 0) + 1;
+    info.lastReviewed = now.toISOString();
+
+    let nextDueText;
+    if (outcome === 'miss') {
+      info.missCount = Number(info.missCount || 0) + 1;
+      info.intervalDays = 0;
+      info.dueAt = addMinutes(now, 10);
+      nextDueText = '10 分钟后';
+    } else if (outcome === 'hard') {
+      info.intervalDays = 1;
+      info.dueAt = addDays(now, 1);
+      nextDueText = '明天';
+    } else {
+      info.correctCount = Number(info.correctCount || 0) + 1;
+      info.intervalDays = nextGoodIntervalDays(info.correctCount);
+      info.dueAt = addDays(now, info.intervalDays);
+      nextDueText = `${info.intervalDays} 天后`;
+    }
+
+    wordMap[word] = info;
+    await chrome.storage.local.set({ words: wordMap });
+    return { ok: true, wordMap, nextDueText };
+  });
+
+  if (result.ok) {
+    scheduleGistSync();
+    updateBadge(result.wordMap);
+  }
+  return { ok: result.ok, error: result.error, nextDueText: result.nextDueText };
 }
 
 // ── 消息监听 ───────────────────────────────────────────────────────────────
@@ -290,8 +464,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         await chrome.storage.local.set({ words: wordMap });
         return wordMap;
       }).then(wordMap => {
-        const learningCount = Object.values(wordMap).filter(w => w.status === 'learning').length;
-        chrome.action.setBadgeText({ text: learningCount > 0 ? String(learningCount) : '' });
+        updateBadge(wordMap);
         scheduleGistSync();
         sendResponse({ ok: true });
       });
@@ -303,19 +476,27 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const { words } = await chrome.storage.local.get('words');
         const wordMap = words || {};
         if (wordMap[msg.word]) {
+          const wasStatus = wordMap[msg.word].status;
           wordMap[msg.word].status = msg.status;
           wordMap[msg.word].lastSeen = nowMinute();
+          if (msg.status === 'learning' && wasStatus !== 'learning') {
+            wordMap[msg.word].dueAt = new Date().toISOString();
+          }
+          ensureReviewFields(wordMap[msg.word]);
         }
         await chrome.storage.local.set({ words: wordMap });
         return wordMap;
       }).then(wordMap => {
-        const learningCount = Object.values(wordMap).filter(w => w.status === 'learning').length;
-        chrome.action.setBadgeText({ text: learningCount > 0 ? String(learningCount) : '' });
+        updateBadge(wordMap);
         scheduleGistSync();
         sendResponse({ ok: true });
       });
       return true;
     }
+
+    case 'REVIEW_WORD':
+      reviewWord(msg.word, msg.outcome).then(sendResponse);
+      return true;
 
     case 'TRANSLATE_TEXT':
       translateText(msg.text, msg.context).then(sendResponse);
@@ -323,23 +504,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     case 'GET_STATS':
       chrome.storage.local.get('words').then(({ words }) => {
-        const map = words || {};
-        const learning = Object.values(map).filter(w => w.status === 'learning').length;
-        const mastered = Object.values(map).filter(w => w.status === 'mastered').length;
-        sendResponse({ learning, mastered, total: learning + mastered });
+        sendResponse(statsFromWords(words));
       });
       return true;
 
     case 'PULL_GIST':
-      // 先把本地未推送的变更 flush 到 Gist，再 pull，避免覆盖本地最新状态
+      // 打开 popup 时优先拉远端，避免用浏览器本地旧状态覆盖 iOS 刚写入的复习进度。
       (async () => {
+        const hadPendingSync = Boolean(gistSyncTimer);
         if (gistSyncTimer) {
           clearTimeout(gistSyncTimer);
           gistSyncTimer = null;
+        }
+
+        const pullResult = await pullFromGist({ preserveLocal: true });
+        if (hadPendingSync && pullResult.ok) {
           await syncToGist();
         }
-        await pullFromGist();
-        sendResponse({ ok: true });
+        sendResponse(pullResult);
       })();
       return true;
   }
