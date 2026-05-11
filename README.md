@@ -81,6 +81,31 @@ To use the same vocabulary on another device:
 
 ---
 
+## Spaced Repetition Algorithm
+
+The review system uses an interval-based spaced repetition algorithm. When reviewing a word, you choose one of three responses:
+
+| Response | Meaning | Next Review | Effect |
+|----------|---------|-------------|--------|
+| **忘了** (Forgot) | Don't remember at all | 10 minutes later | Interval resets to 0, miss count +1 |
+| **模糊** (Fuzzy) | Recalled with difficulty | Tomorrow | Interval set to 1 day |
+| **记得** (Remembered) | Recalled easily | Progressive interval | Interval grows, correct count +1 |
+
+### "Remembered" interval progression
+
+Each consecutive "remembered" response increases the interval following this schedule:
+
+`1 → 3 → 7 → 14 → 30 → 60 → 120 days`
+
+### Other actions
+
+| Action | Effect |
+|--------|--------|
+| **跳过** (Skip) | Postpone 4 hours, no stats change |
+| **已掌握** (Mastered) | Remove from review queue permanently |
+
+---
+
 ## Tech Stack
 
 - Chrome Extension Manifest V3

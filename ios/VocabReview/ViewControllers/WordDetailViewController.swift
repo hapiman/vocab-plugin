@@ -4,12 +4,12 @@ final class WordDetailViewController: UIViewController {
     private let store = VocabStore.shared
     private let word: String
 
-    private let statusLabel = UILabel()
+    private let statusBadge = UILabel()
     private let phoneticLabel = UILabel()
     private let definitionLabel = UILabel()
     private let contextLabel = UILabel()
     private let metaLabel = UILabel()
-    private let primaryButton = UIButton(type: .system)
+    private let primaryButton = GradientButton()
     private let secondaryButton = UIButton(type: .system)
     private let statusMessageLabel = UILabel()
 
@@ -25,7 +25,7 @@ final class WordDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = word
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = Theme.Colors.pageBackground
         setupViews()
         render()
     }
@@ -33,19 +33,21 @@ final class WordDetailViewController: UIViewController {
     private func setupViews() {
         let wordLabel = UILabel()
         wordLabel.text = word
-        wordLabel.font = .systemFont(ofSize: 34, weight: .bold)
+        wordLabel.font = Theme.Font.largeTitle
         wordLabel.textColor = .label
         wordLabel.numberOfLines = 0
         wordLabel.adjustsFontSizeToFitWidth = true
         wordLabel.minimumScaleFactor = 0.7
 
-        statusLabel.font = .systemFont(ofSize: 14, weight: .semibold)
-        statusLabel.textColor = .secondaryLabel
+        statusBadge.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        statusBadge.textAlignment = .center
+        statusBadge.layer.cornerRadius = 6
+        statusBadge.clipsToBounds = true
 
-        phoneticLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        phoneticLabel.textColor = .secondaryLabel
+        phoneticLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        phoneticLabel.textColor = Theme.Colors.subtleText
 
-        definitionLabel.font = .systemFont(ofSize: 18)
+        definitionLabel.font = UIFont.systemFont(ofSize: 18, weight: .medium)
         definitionLabel.textColor = .label
         definitionLabel.numberOfLines = 0
 
@@ -53,36 +55,48 @@ final class WordDetailViewController: UIViewController {
         contextLabel.textColor = .secondaryLabel
         contextLabel.numberOfLines = 0
 
-        metaLabel.font = .systemFont(ofSize: 13)
+        metaLabel.font = Theme.Font.caption
         metaLabel.textColor = .tertiaryLabel
         metaLabel.numberOfLines = 0
 
-        statusMessageLabel.font = .systemFont(ofSize: 14)
-        statusMessageLabel.textColor = .secondaryLabel
+        statusMessageLabel.font = Theme.Font.callout
+        statusMessageLabel.textColor = Theme.Colors.statMastered
         statusMessageLabel.numberOfLines = 0
+        statusMessageLabel.textAlignment = .center
 
-        configureButton(primaryButton, fill: true)
-        configureButton(secondaryButton, fill: false)
-
+        // Buttons
         primaryButton.addTarget(self, action: #selector(primaryAction), for: .touchUpInside)
+        primaryButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
+        primaryButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+
         secondaryButton.addTarget(self, action: #selector(secondaryAction), for: .touchUpInside)
+        secondaryButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
+        secondaryButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+
+        // Cards
+        let headerCard = makeCard(content: makeHeaderContent(wordLabel: wordLabel))
+        let definitionCard = makeCard(content: makeSection(title: "释义", icon: "text.book.closed.fill", contentView: definitionLabel))
+        let contextCard = makeCard(content: makeSection(title: "例句", icon: "quote.bubble.fill", contentView: contextLabel))
+        let metaCard = makeCard(content: makeSection(title: "信息", icon: "info.circle.fill", contentView: metaLabel))
+
+        // Action buttons
+        Theme.applyPrimaryStyle(to: primaryButton)
+        Theme.applySecondaryStyle(to: secondaryButton)
 
         let actionStack = UIStackView(arrangedSubviews: [primaryButton, secondaryButton])
         actionStack.axis = .vertical
-        actionStack.spacing = 10
+        actionStack.spacing = Theme.Spacing.md
 
         let stack = UIStackView(arrangedSubviews: [
-            wordLabel,
-            statusLabel,
-            phoneticLabel,
-            section(title: "释义", content: definitionLabel),
-            section(title: "例句", content: contextLabel),
-            metaLabel,
+            headerCard,
+            definitionCard,
+            contextCard,
+            metaCard,
             actionStack,
             statusMessageLabel
         ])
         stack.axis = .vertical
-        stack.spacing = 16
+        stack.spacing = Theme.Spacing.lg
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         let scrollView = UIScrollView()
@@ -96,51 +110,83 @@ final class WordDetailViewController: UIViewController {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 22),
-            stack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -20),
-            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -28),
-            stack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -40),
-
-            primaryButton.heightAnchor.constraint(equalToConstant: 48),
-            secondaryButton.heightAnchor.constraint(equalToConstant: 46)
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: Theme.Spacing.xl),
+            stack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: Theme.Spacing.xl),
+            stack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -Theme.Spacing.xl),
+            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -Theme.Spacing.xxxl),
+            stack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -Theme.Spacing.xl * 2)
         ])
     }
 
-    private func section(title: String, content: UIView) -> UIView {
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
-        titleLabel.textColor = .secondaryLabel
+    private func makeCard(content: UIView) -> UIView {
+        let card = UIView()
+        card.backgroundColor = Theme.Colors.cardBackground
+        card.layer.cornerRadius = Theme.Radius.medium
+        Theme.applyCardShadow(to: card.layer)
 
-        let stack = UIStackView(arrangedSubviews: [titleLabel, content])
+        content.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(content)
+
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: card.topAnchor, constant: Theme.Spacing.xl),
+            content.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: Theme.Spacing.xl),
+            content.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Theme.Spacing.xl),
+            content.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -Theme.Spacing.xl)
+        ])
+
+        return card
+    }
+
+    private func makeHeaderContent(wordLabel: UILabel) -> UIView {
+        let row = UIStackView(arrangedSubviews: [wordLabel, statusBadge])
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = Theme.Spacing.sm
+
+        statusBadge.setContentHuggingPriority(.required, for: .horizontal)
+
+        let stack = UIStackView(arrangedSubviews: [row, phoneticLabel])
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = Theme.Spacing.sm
         return stack
     }
 
-    private func configureButton(_ button: UIButton, fill: Bool) {
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        button.layer.cornerRadius = 8
-        if fill {
-            button.backgroundColor = .systemBlue
-            button.tintColor = .white
-        } else {
-            button.backgroundColor = .secondarySystemBackground
-            button.tintColor = .systemBlue
-        }
+    private func makeSection(title: String, icon: String, contentView: UIView) -> UIView {
+        let iconView = UIImageView(image: UIImage(systemName: icon))
+        iconView.tintColor = Theme.Colors.accent
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 16).isActive = true
+
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = Theme.Font.caption
+        titleLabel.textColor = Theme.Colors.subtleText
+
+        let titleRow = UIStackView(arrangedSubviews: [iconView, titleLabel])
+        titleRow.axis = .horizontal
+        titleRow.spacing = Theme.Spacing.xs
+        titleRow.alignment = .center
+
+        let stack = UIStackView(arrangedSubviews: [titleRow, contentView])
+        stack.axis = .vertical
+        stack.spacing = Theme.Spacing.sm
+        return stack
     }
 
     private func render() {
         guard let info = store.words[word] else {
-            statusLabel.text = "词条不存在"
+            statusBadge.text = "不存在"
             primaryButton.isHidden = true
             secondaryButton.isHidden = true
             return
         }
 
         let isMastered = info.status == "mastered"
-        statusLabel.text = isMastered ? "已掌握" : "学习中"
+        statusBadge.text = "  \(isMastered ? "已掌握" : "学习中")  "
+        statusBadge.textColor = isMastered ? Theme.Colors.statMastered : Theme.Colors.statLearning
+        statusBadge.backgroundColor = (isMastered ? Theme.Colors.statMastered : Theme.Colors.statLearning).withAlphaComponent(0.12)
+
         phoneticLabel.text = info.phonetic?.isEmpty == false ? info.phonetic : "无音标"
         definitionLabel.text = info.definition?.isEmpty == false ? info.definition : "暂无释义"
         contextLabel.text = info.latestSentence.isEmpty ? "没有保存例句。" : info.latestSentence
@@ -154,7 +200,9 @@ final class WordDetailViewController: UIViewController {
         ].joined(separator: "\n")
 
         primaryButton.setTitle(isMastered ? "重新学习" : "标记已掌握", for: .normal)
+
         secondaryButton.setTitle(isMastered ? "已掌握" : "设为今天复习", for: .normal)
+        secondaryButton.setImage(isMastered ? nil : UIImage(systemName: "calendar.badge.clock"), for: .normal)
         secondaryButton.isEnabled = !isMastered
         secondaryButton.alpha = isMastered ? 0.45 : 1
     }
@@ -171,6 +219,8 @@ final class WordDetailViewController: UIViewController {
         return "到期：\(DateCoding.localMinuteString(date))"
     }
 
+    // MARK: - Actions
+
     @objc private func primaryAction() {
         guard let info = store.words[word] else { return }
         if info.status == "mastered" {
@@ -180,12 +230,37 @@ final class WordDetailViewController: UIViewController {
             store.updateStatus(word: word, status: "mastered")
             statusMessageLabel.text = "已标记为已掌握"
         }
+        animateStatusMessage()
         render()
     }
 
     @objc private func secondaryAction() {
         store.updateStatus(word: word, status: "learning")
         statusMessageLabel.text = "已安排为今天复习"
+        animateStatusMessage()
         render()
+    }
+
+    private func animateStatusMessage() {
+        statusMessageLabel.alpha = 0
+        statusMessageLabel.transform = CGAffineTransform(translationX: 0, y: 8)
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+            self.statusMessageLabel.alpha = 1
+            self.statusMessageLabel.transform = .identity
+        }
+    }
+
+    // MARK: - Button Feedback
+
+    @objc private func buttonTouchDown(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.1, delay: 0, options: .curveEaseIn) {
+            sender.transform = CGAffineTransform(scaleX: 0.97, y: 0.97)
+        }
+    }
+
+    @objc private func buttonTouchUp(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.15, delay: 0, options: .curveEaseOut) {
+            sender.transform = .identity
+        }
     }
 }

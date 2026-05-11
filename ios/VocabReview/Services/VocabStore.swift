@@ -99,6 +99,11 @@ final class VocabStore {
         return result.nextDueText
     }
 
+    func deleteWord(_ word: String) {
+        words.removeValue(forKey: word)
+        persistLocalReviewChanges(errorPrefix: "删除单词失败")
+    }
+
     func updateStatus(word: String, status: String) {
         guard var current = words[word] else { return }
 
