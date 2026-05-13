@@ -7,6 +7,7 @@ final class ReviewCardView: UIView {
     private let definitionTitleLabel = UILabel()
     private let definitionLabel = UILabel()
     private let masteredBadge = UILabel()
+    private let backContextLabel = UILabel()
 
     private let frontContainer = UIView()
     private let backContainer = UIView()
@@ -25,7 +26,12 @@ final class ReviewCardView: UIView {
     func configure(word: String, info: VocabWord, answerVisible: Bool) {
         wordLabel.text = word
         phoneticLabel.text = info.phonetic
-        contextLabel.text = info.latestSentence.isEmpty ? "没有保存例句。" : info.latestSentence
+
+        let sentence = info.latestSentence.isEmpty ? "没有保存例句。" : info.latestSentence
+        let highlighted = Self.highlightWord(word, in: sentence)
+        contextLabel.attributedText = highlighted
+        backContextLabel.attributedText = highlighted
+
         definitionLabel.text = info.definition?.isEmpty == false ? info.definition : "暂无释义。"
 
         // Show mastered state
@@ -68,6 +74,30 @@ final class ReviewCardView: UIView {
         isShowingAnswer = false
         frontContainer.isHidden = false
         backContainer.isHidden = true
+    }
+
+    private static func highlightWord(_ word: String, in sentence: String) -> NSAttributedString {
+        let attr = NSMutableAttributedString(
+            string: sentence,
+            attributes: [
+                .font: UIFont.italicSystemFont(ofSize: 16),
+                .foregroundColor: UIColor.secondaryLabel
+            ]
+        )
+        // Case-insensitive search for the word
+        let searchRange = NSRange(sentence.startIndex..., in: sentence)
+        var range = (sentence as NSString).range(of: word, options: .caseInsensitive, range: searchRange)
+        while range.location != NSNotFound {
+            attr.addAttributes([
+                .font: UIFont.systemFont(ofSize: 16, weight: .bold),
+                .foregroundColor: Theme.Colors.accent
+            ], range: range)
+            let nextStart = range.location + range.length
+            if nextStart >= sentence.count { break }
+            let remaining = NSRange(location: nextStart, length: sentence.count - nextStart)
+            range = (sentence as NSString).range(of: word, options: .caseInsensitive, range: remaining)
+        }
+        return attr
     }
 
     private func setup() {
@@ -176,7 +206,6 @@ final class ReviewCardView: UIView {
         backContextTitle.font = Theme.Font.caption
         backContextTitle.textColor = Theme.Colors.subtleText.withAlphaComponent(0.7)
 
-        let backContextLabel = UILabel()
         backContextLabel.font = .italicSystemFont(ofSize: 16)
         backContextLabel.textColor = .secondaryLabel
         backContextLabel.numberOfLines = 0
@@ -194,9 +223,7 @@ final class ReviewCardView: UIView {
         addSubview(backContainer)
         backContainer.addSubview(stack)
 
-        // Bind back context to same data
-        backWordLabel.text = wordLabel.text
-        backContextLabel.text = contextLabel.text
+        // Content is set dynamically in configure()
 
         NSLayoutConstraint.activate([
             backContainer.topAnchor.constraint(equalTo: topAnchor),

@@ -303,7 +303,7 @@ final class ReviewViewController: UIViewController {
     }
 
     private func reloadQueue() {
-        queue = store.sortedDueQueue
+        queue = store.sortedDueQueue.shuffled()
         currentIndex = 0
         answerVisible = false
         renderCurrent()

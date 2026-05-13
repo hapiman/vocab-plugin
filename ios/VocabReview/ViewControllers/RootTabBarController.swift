@@ -1,9 +1,9 @@
 import UIKit
 
-final class RootTabBarController: UITabBarController {
+final class RootTabBarController: UITabBarController, UITabBarControllerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        delegate = self
         configureAppearance()
 
         viewControllers = [
@@ -46,6 +46,18 @@ final class RootTabBarController: UITabBarController {
         UINavigationBar.appearance().standardAppearance = navBarAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
         UINavigationBar.appearance().tintColor = Theme.Colors.accent
+    }
+
+    // MARK: - UITabBarControllerDelegate
+
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        // If tapping the already-selected tab, scroll its table view to top
+        if viewController == selectedViewController,
+           let nav = viewController as? UINavigationController,
+           let top = nav.topViewController as? UITableViewController {
+            top.tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        }
+        return true
     }
 
     private func makeNavigationController(root: UIViewController, title: String, icon: String, inactiveIcon: String) -> UIViewController {
