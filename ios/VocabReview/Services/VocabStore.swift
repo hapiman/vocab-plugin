@@ -85,6 +85,7 @@ final class VocabStore {
             lastSyncAt = Date()
             lastError = nil
             hasLocalReviewChanges = false
+            Analytics.event(Analytics.syncPull, attributes: ["word_count": "\(remote.count)"])
         } catch {
             lastError = "同步失败：\(error.localizedDescription)"
         }

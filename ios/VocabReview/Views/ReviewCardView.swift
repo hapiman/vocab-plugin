@@ -84,18 +84,19 @@ final class ReviewCardView: UIView {
                 .foregroundColor: UIColor.secondaryLabel
             ]
         )
+        let nsString = sentence as NSString
+        let totalLength = nsString.length
         // Case-insensitive search for the word
-        let searchRange = NSRange(sentence.startIndex..., in: sentence)
-        var range = (sentence as NSString).range(of: word, options: .caseInsensitive, range: searchRange)
-        while range.location != NSNotFound {
+        var searchStart = 0
+        while searchStart < totalLength {
+            let remaining = NSRange(location: searchStart, length: totalLength - searchStart)
+            let range = nsString.range(of: word, options: .caseInsensitive, range: remaining)
+            if range.location == NSNotFound { break }
             attr.addAttributes([
                 .font: UIFont.systemFont(ofSize: 16, weight: .bold),
                 .foregroundColor: Theme.Colors.accent
             ], range: range)
-            let nextStart = range.location + range.length
-            if nextStart >= sentence.count { break }
-            let remaining = NSRange(location: nextStart, length: sentence.count - nextStart)
-            range = (sentence as NSString).range(of: word, options: .caseInsensitive, range: remaining)
+            searchStart = range.location + range.length
         }
         return attr
     }

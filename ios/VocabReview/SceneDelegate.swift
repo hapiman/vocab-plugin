@@ -16,6 +16,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
     }
 
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        Analytics.event(Analytics.appOpen)
+    }
+
     func sceneDidEnterBackground(_ scene: UIScene) {
         Task {
             await VocabStore.shared.pushIfNeeded()

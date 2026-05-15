@@ -346,6 +346,28 @@
 
   // ── 标记操作 ───────────────────────────────────────────────────────────
 
+  // 从 node 向上查找块级祖先，返回包含 word 的文本上下文
+  function getBlockAncestorText(node, word) {
+    if (!node) return '';
+    const blockTags = new Set(['p','div','li','td','th','article','section','blockquote','dd','dt','h1','h2','h3','h4','h5','h6','pre','figcaption']);
+    let el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    const wordLower = word.toLowerCase();
+    // 先尝试直接父文本
+    while (el && el !== document.body) {
+      if (blockTags.has(el.tagName.toLowerCase())) break;
+      el = el.parentElement;
+    }
+    if (!el || el === document.body) el = (node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
+    const text = el?.textContent || '';
+    if (text.toLowerCase().indexOf(wordLower) !== -1) return text;
+    // 块级元素内找不到，向上再找一层
+    if (el?.parentElement && el.parentElement !== document.body) {
+      const upperText = el.parentElement.textContent || '';
+      if (upperText.toLowerCase().indexOf(wordLower) !== -1) return upperText;
+    }
+    return text;
+  }
+
   function extractSentenceAround(text, word) {
     const idx = text.toLowerCase().indexOf(word.toLowerCase());
     if (idx === -1) return text.trim().slice(0, 200);
@@ -359,8 +381,24 @@
   }
 
   function getSentenceContext(span) {
-    const parentText = span.parentElement?.textContent || '';
-    return extractSentenceAround(parentText, span.textContent);
+    const word = span.textContent;
+    // 向上查找包含完整句子的块级祖先，避免直接父元素太窄导致取不到上下文
+    const blockTags = new Set(['p','div','li','td','th','article','section','blockquote','dd','dt','h1','h2','h3','h4','h5','h6','pre','figcaption']);
+    let el = span.parentElement;
+    while (el && el !== document.body) {
+      if (blockTags.has(el.tagName.toLowerCase())) break;
+      el = el.parentElement;
+    }
+    if (!el || el === document.body) el = span.parentElement;
+    const parentText = el?.textContent || '';
+    // 如果在当前块级元素中找不到单词，再尝试向上一层
+    if (parentText.toLowerCase().indexOf(word.toLowerCase()) === -1 && el?.parentElement) {
+      const upperText = el.parentElement.textContent || '';
+      if (upperText.toLowerCase().indexOf(word.toLowerCase()) !== -1) {
+        return extractSentenceAround(upperText, word);
+      }
+    }
+    return extractSentenceAround(parentText, word);
   }
 
   function getContext(span) {
@@ -444,10 +482,10 @@
     } catch { return; }
     if (!rect || rect.width === 0) return;
 
-    // 提取所在句子作为上下文
-    const anchorText = (selection?.anchorNode?.textContent || '').trim();
+    // 提取所在句子作为上下文：优先从块级祖先获取，确保包含目标词
+    const contextText = getBlockAncestorText(selection?.anchorNode, normalizedWord);
     const context = {
-      sentence: extractSentenceAround(anchorText, normalizedWord),
+      sentence: extractSentenceAround(contextText, normalizedWord),
       url: location.href,
       date: new Date().toISOString().slice(0, 10),
     };
@@ -478,17 +516,16 @@
     } catch (e) { return; }
     if (!rect || rect.width === 0) return;
 
-    // 提前捕获上下文（选区消失后 anchorNode 可能失效）
-    const anchorText = (selection?.anchorNode?.textContent || '').trim();
-
     // 纯英文单词（含连字符）→ 查词；纯英文短语（≤6词）→ 查词
     const isWord = /^[a-zA-Z][a-zA-Z'-]{1,29}$/.test(selectedText);
     const isEnPhrase = !isWord && /^[a-zA-Z][a-zA-Z' -]*[a-zA-Z]$/.test(selectedText) && selectedText.split(/\s+/).length <= 6;
     if (isWord || isEnPhrase) {
       const normalizedWord = selectedText.toLowerCase().replace(/\s+/g, ' ');
       if (wordStatus[normalizedWord]?.status === 'learning') return;
+      // 从块级祖先获取上下文，确保包含目标词
+      const contextText = getBlockAncestorText(selection?.anchorNode, normalizedWord);
       const capturedContext = {
-        sentence: extractSentenceAround(anchorText, normalizedWord),
+        sentence: extractSentenceAround(contextText, normalizedWord),
         url: location.href,
         date: new Date().toISOString().slice(0, 10),
       };
@@ -498,8 +535,8 @@
       const nonAscii = (selectedText.match(/[^\x00-\x7F]/g) || []).length;
       const isEnglishContent = nonAscii / selectedText.replace(/\s/g, '').length < 0.15;
       if (isEnglishContent) {
-        const capturedSurrounding = anchorText.slice(0, 300);
-        showSelectionIcon('translate', rect, () => showTranslationPopup(selectedText, rect, capturedSurrounding));
+        const contextText = getBlockAncestorText(selection?.anchorNode, selectedText);
+        showSelectionIcon('translate', rect, () => showTranslationPopup(selectedText, rect, contextText.slice(0, 300)));
       }
     }
   }

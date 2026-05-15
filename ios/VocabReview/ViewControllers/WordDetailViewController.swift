@@ -28,6 +28,7 @@ final class WordDetailViewController: UIViewController {
         view.backgroundColor = Theme.Colors.pageBackground
         setupViews()
         render()
+        Analytics.event(Analytics.wordDetailView)
     }
 
     private func setupViews() {

@@ -307,6 +307,10 @@ final class ReviewViewController: UIViewController {
         currentIndex = 0
         answerVisible = false
         renderCurrent()
+
+        if !queue.isEmpty {
+            Analytics.event(Analytics.reviewStart, attributes: ["word_count": "\(queue.count)"])
+        }
     }
 
     private func renderCurrent() {
@@ -342,6 +346,7 @@ final class ReviewViewController: UIViewController {
         guard currentIndex < queue.count else { return }
         let word = queue[currentIndex].0
         _ = store.applyReview(word: word, outcome: outcome)
+        Analytics.event(Analytics.reviewComplete, attributes: ["outcome": "\(outcome)"])
         if let updated = store.words[word] {
             queue[currentIndex] = (word, updated)
         }
