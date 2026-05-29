@@ -369,7 +369,37 @@
   }
 
   function extractSentenceAround(text, word) {
-    const idx = text.toLowerCase().indexOf(word.toLowerCase());
+    const textLower = text.toLowerCase();
+    const wordLower = word.toLowerCase();
+    let idx = textLower.indexOf(wordLower);
+
+    // 对多词短语，若精确匹配失败，尝试按词序逐词查找（覆盖词被其他内容隔开的情况）
+    if (idx === -1 && (wordLower.includes(' ') || wordLower.includes('...') || wordLower.includes('…'))) {
+      const parts = wordLower.split(/[\s.…]+/).filter(Boolean);
+      let searchFrom = 0;
+      let firstIdx = -1;
+      let lastEnd = -1;
+      let allFound = true;
+      for (const part of parts) {
+        const partIdx = textLower.indexOf(part, searchFrom);
+        if (partIdx === -1) { allFound = false; break; }
+        if (firstIdx === -1) firstIdx = partIdx;
+        lastEnd = partIdx + part.length;
+        searchFrom = lastEnd;
+      }
+      if (allFound && firstIdx !== -1) {
+        // 用第一个词的位置作为锚点，截取到最后一个词结束
+        idx = firstIdx;
+        const before = text.slice(0, idx);
+        const sentenceStartMatch = before.search(/[.!?。！？\n][^.!?。！？\n]*$/);
+        const sentenceStart = sentenceStartMatch === -1 ? 0 : sentenceStartMatch + 1;
+        const after = text.slice(lastEnd);
+        const sentenceEndMatch = after.search(/[.!?。！？\n]/);
+        const sentenceEnd = lastEnd + (sentenceEndMatch === -1 ? after.length : sentenceEndMatch + 1);
+        return text.slice(Math.max(0, sentenceStart), sentenceEnd).trim().slice(0, 600);
+      }
+    }
+
     if (idx === -1) return text.trim().slice(0, 200);
     const before = text.slice(0, idx);
     const sentenceStartMatch = before.search(/[.!?。！？\n][^.!?。！？\n]*$/);
@@ -620,11 +650,11 @@
     document.body.appendChild(popupEl);
     positionPopupByRect(selectionRect);
 
-    const context = { sentence: surroundingText, url: location.href, date: new Date().toISOString().slice(0, 10) };
+    const context = { sentence: extractSentenceAround(surroundingText || text, normalizedPhrase), url: location.href, date: new Date().toISOString().slice(0, 10) };
     const savePhrase = async (status) => {
       await markWord(normalizedPhrase, status, null, context);
       // 异步获取释义并存储（markWord 已完成，saveDefinition 能找到该词）
-      chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word: normalizedPhrase, context: surroundingText });
+      chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word: normalizedPhrase, context: context.sentence });
     };
     popupEl.querySelector('.vocab-btn-learn').addEventListener('click', () => savePhrase('learning'));
     popupEl.querySelector('.vocab-btn-master').addEventListener('click', () => savePhrase('mastered'));
@@ -657,7 +687,7 @@
             const phrase = btn.dataset.phrase.toLowerCase().replace(/\s+/g, ' ');
             await chrome.runtime.sendMessage({
               type: 'MARK_WORD', word: phrase, status: 'learning',
-              context: { sentence: surroundingText, url: location.href, date: new Date().toISOString().slice(0, 10) },
+              context: { sentence: extractSentenceAround(text, phrase), url: location.href, date: new Date().toISOString().slice(0, 10) },
             });
             wordStatus[phrase] = { status: 'learning' };
             learningRegexCache = null;
@@ -666,7 +696,7 @@
             btn.disabled = true;
             btn.classList.add('vocab-phrase-pin-saved');
             // 后台异步获取释义并保存，不影响当前交互
-            chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word: phrase, context: surroundingText });
+            chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word: phrase, context: extractSentenceAround(text, phrase) });
             // 不关闭弹窗，让用户继续点其他词组
           });
         });

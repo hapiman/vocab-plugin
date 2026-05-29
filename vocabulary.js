@@ -171,7 +171,21 @@ function highlightWord(sentence, word) {
   const escaped = escHtml(sentence);
   const wordEscaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const re = new RegExp(`(${wordEscaped})`, 'gi');
-  return escaped.replace(re, '<mark class="word-highlight">$1</mark>');
+  const result = escaped.replace(re, '<mark class="word-highlight">$1</mark>');
+  if (result !== escaped) return result;
+
+  // 多词短语在例句中可能不连续出现，逐词高亮
+  if (word.includes(' ') || word.includes('...') || word.includes('…')) {
+    const parts = word.split(/[\s.…]+/).filter(Boolean);
+    let highlighted = escaped;
+    for (const part of parts) {
+      const partEscaped = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const partRe = new RegExp(`\\b(${partEscaped})\\b`, 'gi');
+      highlighted = highlighted.replace(partRe, '<mark class="word-highlight">$1</mark>');
+    }
+    return highlighted;
+  }
+  return result;
 }
 
 // ── 事件绑定 ───────────────────────────────────────────────────────────────
