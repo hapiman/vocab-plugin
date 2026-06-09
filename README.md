@@ -26,6 +26,38 @@
 
 ---
 
+## 界面预览
+
+### 浏览器扩展
+
+**网页划词翻译 / 收词**
+
+<img src="images/plg01.png" alt="网页划词翻译与收词" width="640" />
+
+**扩展弹窗**
+
+<img src="images/plg02.png" alt="扩展弹窗" width="320" />
+
+**复习页**
+
+<img src="images/plg03.png" alt="复习页" width="800" />
+
+**生词本 —— 单词列表**
+
+<img src="images/plg04.png" alt="生词本单词列表" width="800" />
+
+**生词本 —— 学习统计**
+
+<img src="images/plg05.png" alt="生词本学习统计" width="800" />
+
+### Android 复习端
+
+| 首页 | 词库 | 单词详情 | 闪卡复习 | 同步设置 |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="images/20260609-122242.460-1.jpg" width="180" alt="首页" /> | <img src="images/20260609-122242.460-2.jpg" width="180" alt="词库" /> | <img src="images/20260609-122242.460-3.jpg" width="180" alt="单词详情" /> | <img src="images/20260609-122242.460-4.jpg" width="180" alt="闪卡复习" /> | <img src="images/20260609-122242.460-5.jpg" width="180" alt="同步设置" /> |
+
+---
+
 ## 安装与构建
 
 ### 浏览器扩展
