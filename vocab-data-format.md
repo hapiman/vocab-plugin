@@ -1,6 +1,6 @@
 # Vocab Learner Shared Data Format
 
-本文档约定浏览器扩展和 iOS 复习 App 共享的 GitHub Gist 数据协议。
+本文档约定浏览器扩展和复习 App（iOS / Android）共享的 GitHub Gist 数据协议。
 
 ## 文件位置
 
@@ -55,11 +55,11 @@ vocab-learner.json
 | `dueAt` | string | 下次到期时间，ISO 8601 |
 | `lastReviewed` | string | 最近复习时间，ISO 8601 |
 
-## iOS App 写入范围
+## 复习端（iOS / Android）写入范围
 
-iOS App 只做复习，不收词。所有新增单词、释义、例句和来源都由 PC 浏览器扩展产生。
+复习 App 只做复习，不收词。所有新增单词、释义、例句和来源都由 PC 浏览器扩展产生。
 
-iOS App 允许更新以下字段：
+复习 App 允许更新以下字段：
 
 - `status`
 - `lastSeen`
@@ -70,7 +70,7 @@ iOS App 允许更新以下字段：
 - `dueAt`
 - `lastReviewed`
 
-iOS App 不应该更新以下字段：
+复习 App 不应该更新以下字段：
 
 - `firstSeen`
 - `contexts`
@@ -79,7 +79,7 @@ iOS App 不应该更新以下字段：
 
 ## 复习调度
 
-iOS App 必须和浏览器扩展保持一致。
+复习 App（iOS / Android）必须和浏览器扩展保持一致。
 
 | 操作 | outcome | 调度 |
 | --- | --- | --- |
@@ -91,12 +91,12 @@ iOS App 必须和浏览器扩展保持一致。
 
 ## 同步合并规则
 
-iOS App 推送前必须先拉取远端 Gist，然后合并：
+复习 App 推送前必须先拉取远端 Gist，然后合并：
 
 1. 远端词库是词条来源的主版本。
 2. 远端新增词必须保留。
 3. 远端新增 `contexts`、`definition`、`phonetic` 必须保留。
-4. 对同一个词，iOS 只覆盖允许写入的复习字段。
-5. iOS 本地存在但远端不存在的词，不主动新增到远端。
+4. 对同一个词，复习 App 只覆盖允许写入的复习字段。
+5. 复习 App 本地存在但远端不存在的词，不主动新增到远端。
 
 这样可以避免手机端复习进度覆盖 PC 浏览器刚收集的新词和例句。
