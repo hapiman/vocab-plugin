@@ -1,6 +1,0 @@
-framework module UMCommon {
-  umbrella header "UMCommon.h"
-  export *
-
-  module * { export * }
-}

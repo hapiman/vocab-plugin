@@ -1,6 +1,0 @@
-framework module UMZid {
-  umbrella header "UMZid.h"
-
-  export *
-  module * { export * }
-}
