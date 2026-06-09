@@ -24,11 +24,49 @@ async function drainWriteQueue() {
 
 // ── Gist 同步 ──────────────────────────────────────────────────────────────
 
-let gistSyncTimer = null;
+const GIST_SYNC_ALARM = 'gist-sync';
 
+// 用 chrome.alarms 做 5 秒防抖：alarms 能跨 MV3 service worker 回收存活，
+// 避免保存单词后 worker 被回收、setTimeout 随之丢失导致同步从不触发。
 function scheduleGistSync() {
-  if (gistSyncTimer) clearTimeout(gistSyncTimer);
-  gistSyncTimer = setTimeout(syncToGist, 5000); // 5秒防抖
+  // 重复 create 同名 alarm 会覆盖上一个，天然实现防抖。
+  chrome.alarms.create(GIST_SYNC_ALARM, { when: Date.now() + 5000 });
+}
+
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === GIST_SYNC_ALARM) syncToGist();
+});
+
+// 记录最近一次同步结果，供设置页 / popup 读取展示。
+async function recordSyncState(state) {
+  await chrome.storage.local.set({
+    lastSyncState: { ...state, at: new Date().toISOString() }
+  });
+}
+
+// 在 GitHub 创建一个新的私有 Gist，写回 gistId。
+async function createGist(githubToken, content) {
+  const res = await fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${githubToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      description: 'Vocab Learner - 个人词库',
+      public: false,
+      files: { 'vocab-learner.json': { content } }
+    })
+  });
+  if (!res.ok) {
+    const err = new Error(`GitHub API ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  await chrome.storage.local.set({ gistId: data.id });
+  return data.id;
 }
 
 async function syncToGist() {
@@ -38,6 +76,8 @@ async function syncToGist() {
   const content = JSON.stringify(words || {}, null, 2);
 
   try {
+    let created = false;
+
     if (gistId) {
       // 更新已有 Gist
       const res = await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -50,30 +90,40 @@ async function syncToGist() {
           files: { 'vocab-learner.json': { content } }
         })
       });
-      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+
+      if (res.status === 404 || res.status === 422) {
+        // 远端 gist 已被删除 / 无法访问 → 清掉失效 id，回退到创建分支。
+        await chrome.storage.local.remove('gistId');
+        await createGist(githubToken, content);
+        created = true;
+      } else if (res.status === 401 || res.status === 403) {
+        // token 无效或缺少 gist 权限 → 重建也会失败，如实报错。
+        const err = new Error(`GitHub API ${res.status}`);
+        err.status = res.status;
+        throw err;
+      } else if (!res.ok) {
+        const err = new Error(`GitHub API ${res.status}`);
+        err.status = res.status;
+        throw err;
+      }
     } else {
-      // 创建新 Gist
-      const res = await fetch('https://api.github.com/gists', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${githubToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: 'Vocab Learner - 个人词库',
-          public: false,
-          files: { 'vocab-learner.json': { content } }
-        })
-      });
-      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-      const data = await res.json();
-      await chrome.storage.local.set({ gistId: data.id });
+      // 本地没有 gistId → 创建新 Gist
+      await createGist(githubToken, content);
+      created = true;
     }
-    await chrome.storage.local.set({ lastGistSync: new Date().toISOString() });
-    return { ok: true };
+
+    const lastGistSync = new Date().toISOString();
+    await chrome.storage.local.set({ lastGistSync });
+    await recordSyncState({ ok: true, created, code: created ? 'created' : 'updated', lastGistSync });
+    return { ok: true, created };
   } catch (e) {
     console.error('Gist sync failed:', e);
-    return { ok: false, error: e.message };
+    const code = (e.status === 401 || e.status === 403) ? 'forbidden' : 'error';
+    const error = code === 'forbidden'
+      ? 'GitHub Token 无效或缺少 gist 权限'
+      : e.message;
+    await recordSyncState({ ok: false, code, error });
+    return { ok: false, code, error };
   }
 }
 
@@ -125,35 +175,59 @@ function mergePulledWords(remoteWords, localWords) {
 async function pullFromGist(options = {}) {
   const { preserveLocal = true } = options;
   const { githubToken, gistId, words: localWords } = await chrome.storage.local.get(['githubToken', 'gistId', 'words']);
-  if (!githubToken || !gistId) {
-    return { ok: false, error: '请先在设置页填写 GitHub Token 和 Gist ID', stats: statsFromWords(localWords) };
+
+  if (!githubToken) {
+    return { ok: false, code: 'no-token', error: '请先在设置页填写 GitHub Token', stats: statsFromWords(localWords) };
   }
 
-  try {
-    const res = await fetch(`https://api.github.com/gists/${gistId}?t=${Date.now()}`, {
-      cache: 'no-store',
-      headers: {
-        'Authorization': `Bearer ${githubToken}`,
-        'Cache-Control': 'no-cache',
-      }
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || `GitHub API ${res.status}`);
+  // 本地无 gistId（新账号）或远端 404（已删除）→ 自动创建新 Gist。
+  let needCreate = !gistId;
 
-    const content = data.files?.['vocab-learner.json']?.content;
-    if (!content) {
-      return { ok: false, error: 'Gist 中没有 vocab-learner.json', stats: statsFromWords(localWords) };
+  try {
+    if (!needCreate) {
+      const res = await fetch(`https://api.github.com/gists/${gistId}?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Authorization': `Bearer ${githubToken}`,
+          'Cache-Control': 'no-cache',
+        }
+      });
+
+      if (res.status === 404) {
+        await chrome.storage.local.remove('gistId');
+        needCreate = true;
+      } else {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || `GitHub API ${res.status}`);
+
+        const content = data.files?.['vocab-learner.json']?.content;
+        if (!content) {
+          return { ok: false, code: 'no-file', error: 'Gist 中没有 vocab-learner.json', stats: statsFromWords(localWords) };
+        }
+
+        const remoteWords = JSON.parse(content);
+        const words = preserveLocal ? mergePulledWords(remoteWords, localWords || {}) : remoteWords;
+        const lastGistSync = new Date().toISOString();
+        await chrome.storage.local.set({ words, lastGistSync });
+        await recordSyncState({ ok: true, code: 'pulled', lastGistSync });
+        updateBadge(words);
+        return { ok: true, code: 'pulled', stats: statsFromWords(words), lastGistSync };
+      }
     }
 
-    const remoteWords = JSON.parse(content);
-    const words = preserveLocal ? mergePulledWords(remoteWords, localWords || {}) : remoteWords;
+    // 走到这里说明需要创建新 Gist。
+    const newId = await createGist(githubToken, JSON.stringify(localWords || {}, null, 2));
     const lastGistSync = new Date().toISOString();
-    await chrome.storage.local.set({ words, lastGistSync });
-    updateBadge(words);
-    return { ok: true, stats: statsFromWords(words), lastGistSync };
+    await chrome.storage.local.set({ lastGistSync });
+    await recordSyncState({ ok: true, created: true, code: 'created', lastGistSync });
+    return { ok: true, created: true, code: 'created', gistId: newId, stats: statsFromWords(localWords), lastGistSync };
   } catch (e) {
     console.error('Gist pull failed:', e);
-    return { ok: false, error: e.message, stats: statsFromWords(localWords) };
+    const forbidden = e.status === 401 || e.status === 403;
+    const code = forbidden ? 'forbidden' : 'error';
+    const error = forbidden ? 'GitHub Token 无效或缺少 gist 权限' : e.message;
+    await recordSyncState({ ok: false, code, error });
+    return { ok: false, code: 'error', error: e.message, stats: statsFromWords(localWords) };
   }
 }
 
@@ -511,10 +585,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     case 'PULL_GIST':
       // 打开 popup 时优先拉远端，避免用浏览器本地旧状态覆盖 iOS 刚写入的复习进度。
       (async () => {
-        const hadPendingSync = Boolean(gistSyncTimer);
-        if (gistSyncTimer) {
-          clearTimeout(gistSyncTimer);
-          gistSyncTimer = null;
+        const hadPendingSync = Boolean(await chrome.alarms.get(GIST_SYNC_ALARM));
+        if (hadPendingSync) {
+          await chrome.alarms.clear(GIST_SYNC_ALARM);
         }
 
         const pullResult = await pullFromGist({ preserveLocal: true });

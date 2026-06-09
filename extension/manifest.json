@@ -5,7 +5,8 @@
   "description": "智能英文单词学习助手 - 标记生词，AI 释义，Gist 同步",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>",

@@ -7,7 +7,8 @@ async function init() {
     const result = await chrome.runtime.sendMessage({ type: 'PULL_GIST' });
     if (result?.stats) renderStats(result.stats);
     if (result?.ok) {
-      setSyncStatus(`已同步 ${formatTime(result.lastGistSync)}`);
+      const prefix = result.code === 'created' ? '已创建词库 ' : '已同步 ';
+      setSyncStatus(`${prefix}${formatTime(result.lastGistSync)}`);
     } else {
       setSyncStatus(`同步失败：${result?.error || '未知错误'}`, true);
     }
