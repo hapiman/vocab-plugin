@@ -1,6 +1,29 @@
-.claude/
+# === OS / Editor ===
 .DS_Store
+.claude/
 
-# Xcode user state
+# JetBrains IDE (user-specific state)
+**/.idea/workspace.xml
+**/.idea/shelf/
+
+# === Android / Gradle ===
+.gradle/
+build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing — never commit keystores or passwords
+*.jks
+*.keystore
+keystore.properties
+
+# === iOS / Xcode ===
 xcuserdata/
 *.xcuserstate
+DerivedData/
+
+# === CocoaPods ===
+# Pods are not committed; restore with `pod install`
+Pods/
