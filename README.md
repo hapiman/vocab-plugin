@@ -14,6 +14,17 @@
 
 ---
 
+## 下载
+
+Android 复习端（已签名 APK，最低 Android 8.0）：
+
+- **最新版**：[vocab-learner-v0.1.0.apk](https://github.com/hapiman/vocab-plugin/releases/latest/download/vocab-learner-v0.1.0.apk)
+- 全部版本见 [Releases 页面](https://github.com/hapiman/vocab-plugin/releases)
+
+> 浏览器扩展请参考下方[安装与构建](#安装与构建)，加载 `extension/` 目录即可。
+
+---
+
 ## 功能
 
 - **高亮生词** —— 在你访问的每个网页上为生词加下划线
@@ -185,6 +196,10 @@ iOS 端使用 CocoaPods 管理依赖：
 - **云同步**：GitHub Gist API
 
 ---
+
+## 有问题，欢迎打扰
+
+<img src="images/qr.jpg" alt="qa" width="240" />
 
 ## 许可证
 
