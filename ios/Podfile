@@ -1,0 +1,11 @@
+platform :ios, '14.0'
+
+target 'VocabReview' do
+  use_frameworks!
+
+  # 友盟基础库 + 统计分析
+  pod 'UMCommon'
+  pod 'UMDevice'
+
+
+end
