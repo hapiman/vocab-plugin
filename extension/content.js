@@ -28,21 +28,34 @@
     // 监听动态内容
     const observer = new MutationObserver(mutations => {
       for (const m of mutations) {
+        // 文本内容被直接改写（React 常见）：重扫其父元素
+        if (m.type === 'characterData') {
+          const el = m.target.parentElement;
+          if (el) processNode(el);
+          continue;
+        }
         for (const node of m.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             processNode(node);
+          } else if (node.nodeType === Node.TEXT_NODE && node.parentElement) {
+            // 文本节点被单独插入到已有元素里：扫描其父元素
+            // （用 processNode 而非直接 replaceTextNode，以复用跳过规则）
+            processNode(node.parentElement);
           }
         }
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
     // 点击页面其他地方关闭弹窗
     document.addEventListener('click', onDocClick, true);
     // 选中文字后弹出查词菜单
-    document.addEventListener('mouseup', onSelectionEnd);
+    // 用捕获阶段监听：部分站点（如 X/Twitter）会在冒泡阶段对
+    // mouseup/dblclick 调用 stopPropagation（用于区分“点击打开推文”和
+    // “拖选文字”），导致挂在 document 冒泡阶段的监听器完全收不到事件。
+    document.addEventListener('mouseup', onSelectionEnd, true);
     // 双击单词直接弹出释义
-    document.addEventListener('dblclick', onDblClickWord);
+    document.addEventListener('dblclick', onDblClickWord, true);
   }
 
   // ── DOM 处理 ───────────────────────────────────────────────────────────
@@ -74,8 +87,11 @@
           if (el.closest('.vocab-popup')) return NodeFilter.FILTER_REJECT;
           if (el.classList.contains('vocab-word')) return NodeFilter.FILTER_REJECT;
           if (SKIP_TAGS.has(el.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
-          // 跳过可编辑区域
-          if (el.isContentEditable || el.closest('[contenteditable]')) return NodeFilter.FILTER_REJECT;
+          // 跳过真正可编辑的区域（如发推框）。用 isContentEditable 而非
+          // closest('[contenteditable]')：后者会把 contenteditable="false"
+          // 也算进去，而 X/Twitter 用只读的 contenteditable="false" 容器
+          // 渲染推文正文，会导致正文被整体跳过、无法标记。
+          if (el.isContentEditable) return NodeFilter.FILTER_REJECT;
           if (node.textContent.trim().length === 0) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
@@ -101,7 +117,11 @@
     const pattern = entries
       .map(e => e.trim().split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'))
       .join('|');
-    learningRegexCache = new RegExp(`(?<![a-zA-Z])(${pattern})(?![a-zA-Z])`, 'gi');
+    try {
+      learningRegexCache = new RegExp(`(?<![a-zA-Z])(${pattern})(?![a-zA-Z])`, 'gi');
+    } catch (e) {
+      return null; // 某个词导致正则非法时，避免整体崩溃
+    }
     return learningRegexCache;
   }
 
@@ -183,12 +203,13 @@
     selectionIconEl.textContent = type === 'word' ? 'Aa' : '译';
     selectionIconEl.dataset.type = type;
 
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    const top = rect.top + scrollY - 36;
-    const left = Math.min(rect.right + scrollX + 6, window.innerWidth + scrollX - 48);
+    // 用视口坐标（position: fixed），不加 scroll 偏移。
+    // 某些 SPA（如 X/Twitter）用内部容器滚动，window.scrollY 恒为 0，
+    // 若按文档坐标定位会把图标放到页面顶端视口外，导致「元素存在却看不见」。
+    const top = rect.top - 36;
+    const left = Math.min(rect.right + 6, window.innerWidth - 48);
 
-    selectionIconEl.style.top = `${Math.max(scrollY + 4, top)}px`;
+    selectionIconEl.style.top = `${Math.max(4, top)}px`;
     selectionIconEl.style.left = `${left}px`;
 
     selectionIconEl.addEventListener('click', e => {
@@ -278,9 +299,7 @@
   }
 
   function positionPopupByRect(rect) {
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-
+    // 用视口坐标（position: fixed），不加 scroll 偏移，理由同 showSelectionIcon。
     popupEl.style.top = '-9999px';
     popupEl.style.left = '0px';
 
@@ -289,13 +308,13 @@
       const popupW = popupEl.offsetWidth || 300;
       const popupH = popupEl.offsetHeight || 160;
 
-      let left = rect.left + scrollX;
-      if (left + popupW > window.innerWidth + scrollX - 8) left = window.innerWidth + scrollX - popupW - 8;
-      if (left < scrollX + 8) left = scrollX + 8;
+      let left = rect.left;
+      if (left + popupW > window.innerWidth - 8) left = window.innerWidth - popupW - 8;
+      if (left < 8) left = 8;
 
       const top = (rect.top > popupH + 12)
-        ? rect.top + scrollY - popupH - 8
-        : rect.bottom + scrollY + 8;
+        ? rect.top - popupH - 8
+        : rect.bottom + 8;
 
       popupEl.style.left = `${left}px`;
       popupEl.style.top = `${top}px`;
@@ -528,7 +547,7 @@
   function onSelectionEnd(e) {
     if (selectionIconEl && selectionIconEl.contains(e.target)) return;
     if (popupEl && popupEl.contains(e.target)) return;
-    if (e.target.classList.contains('vocab-word')) return;
+    if (e.target && e.target.classList && e.target.classList.contains('vocab-word')) return;
 
     const selection = window.getSelection();
     const selectedText = selection?.toString().trim();
