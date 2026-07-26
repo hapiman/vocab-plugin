@@ -248,7 +248,10 @@ async function callDeepSeek(messages, maxTokens) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        // deepseek-chat 已于 2026-07-24 下线，需使用 v4 模型
+        model: 'deepseek-v4-flash',
+        // 词典/翻译场景无需推理，关闭 thinking 以降低延迟与成本（v4 默认开启）
+        thinking: { type: 'disabled' },
         max_tokens: maxTokens,
         messages,
       })
