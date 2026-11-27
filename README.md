@@ -1,206 +1,206 @@
-# Vocab Learner（生词学习）
+# Vocab Learner
 
-一个跨平台的英语生词学习项目：浏览器扩展负责在网页上收词、查词、翻译，移动端（iOS / Android）负责复习。所有数据通过 GitHub Gist 在多端之间同步。
+A cross-platform English vocabulary learning project. The browser extension captures words, looks up definitions, and translates text on web pages. The mobile apps (iOS / Android) are designed for review. All data is synced across devices through GitHub Gist.
 
-## 仓库结构
+## Repository Structure
 
-| 目录 | 平台 | 职责 |
+| Directory | Platform | Responsibilities |
 |---|---|---|
-| [`extension/`](extension/) | Chrome 扩展（Manifest V3） | 网页收词、查词、翻译、保存、复习 |
-| [`android/`](android/) | Android（Jetpack Compose） | 复习端 |
-| [`ios/`](ios/) | iOS（Swift / UIKit） | 复习端 |
+| [`extension/`](extension/) | Chrome Extension (Manifest V3) | Capture, look up, translate, save, and review words on the web |
+| [`android/`](android/) | Android (Jetpack Compose) | Vocabulary review |
+| [`ios/`](ios/) | iOS (Swift / UIKit) | Vocabulary review |
 
-各端共享同一份 GitHub Gist 数据，数据格式与同步规则见 [`vocab-data-format.md`](vocab-data-format.md)。
-
----
-
-## 下载
-
-Android 复习端（已签名 APK，最低 Android 8.0）：
-
-- **最新版**：[vocab-learner-v0.1.0.apk](https://github.com/hapiman/vocab-plugin/releases/latest/download/vocab-learner-v0.1.0.apk)
-- 全部版本见 [Releases 页面](https://github.com/hapiman/vocab-plugin/releases)
-
-> 浏览器扩展请参考下方[安装与构建](#安装与构建)，加载 `extension/` 目录即可。
+All platforms share the same GitHub Gist data. See [`vocab-data-format.md`](vocab-data-format.md) for the data format and synchronization rules.
 
 ---
 
-## 功能
+## Download
 
-- **高亮生词** —— 在你访问的每个网页上为生词加下划线
-- **点击查词** —— 点击带下划线的单词，查看释义和例句
-- **划词翻译** —— 选中任意英文文本，获取 AI 翻译及关键短语拆解
-- **一键保存** —— 在任意弹窗中把单词或短语加入生词本
-- **间隔复习** —— 以「忘了 / 模糊 / 记得」对到期生词进行复习调度
-- **生词本页面** —— 查看所有保存的单词，含释义、例句和来源网址
-- **GitHub Gist 同步** —— 生词列表自动同步到私有 GitHub Gist，可在多设备间共享
+Android review app (signed APK, requires Android 8.0 or later):
+
+- **Latest version**: [vocab-learner-v0.1.0.apk](https://github.com/hapiman/vocab-plugin/releases/latest/download/vocab-learner-v0.1.0.apk)
+- See all versions on the [Releases page](https://github.com/hapiman/vocab-plugin/releases)
+
+> For the browser extension, see [Installation and Build](#installation-and-build) below and load the `extension/` directory.
 
 ---
 
-## 界面预览
+## Features
 
-### 浏览器扩展
+- **Highlight vocabulary** — Underline words you are learning on every web page you visit.
+- **Click to look up** — Click an underlined word to see its definition and example sentences.
+- **Translate selected text** — Select English text for AI translation and a breakdown of key phrases.
+- **One-click saving** — Save words or phrases to your vocabulary from any popup.
+- **Spaced review** — Review due words using the Forgot / Hard / Got It ratings.
+- **Vocabulary page** — View saved words, definitions, example sentences, and source URLs.
+- **GitHub Gist sync** — Automatically sync your vocabulary to a secret GitHub Gist shared across devices.
 
-**网页划词翻译 / 收词**
+---
 
-<img src="images/plg01.png" alt="网页划词翻译与收词" width="640" />
+## Interface Previews
 
-**扩展弹窗**
+### Browser Extension
 
-<img src="images/plg02.png" alt="扩展弹窗" width="320" />
+**Translate and save selected text on a web page**
 
-**复习页**
+<img src="images/plg01.png" alt="Translate and save selected text on a web page" width="640" />
 
-<img src="images/plg03.png" alt="复习页" width="800" />
+**Extension popup**
 
-**生词本 —— 单词列表**
+<img src="images/plg02.png" alt="Extension popup" width="320" />
 
-<img src="images/plg04.png" alt="生词本单词列表" width="800" />
+**Review page**
 
-**生词本 —— 学习统计**
+<img src="images/plg03.png" alt="Review page" width="800" />
 
-<img src="images/plg05.png" alt="生词本学习统计" width="800" />
+**Vocabulary — Word list**
 
-### Android 复习端
+<img src="images/plg04.png" alt="Vocabulary word list" width="800" />
 
-| 首页 | 词库 | 单词详情 | 闪卡复习 | 同步设置 |
+**Vocabulary — Learning statistics**
+
+<img src="images/plg05.png" alt="Vocabulary learning statistics" width="800" />
+
+### Android Review App
+
+| Home | Vocabulary | Word Details | Flashcard Review | Sync Settings |
 |:---:|:---:|:---:|:---:|:---:|
-| <img src="images/20260609-122242.460-1.jpg" width="180" alt="首页" /> | <img src="images/20260609-122242.460-2.jpg" width="180" alt="词库" /> | <img src="images/20260609-122242.460-3.jpg" width="180" alt="单词详情" /> | <img src="images/20260609-122242.460-4.jpg" width="180" alt="闪卡复习" /> | <img src="images/20260609-122242.460-5.jpg" width="180" alt="同步设置" /> |
+| <img src="images/20260609-122242.460-1.jpg" width="180" alt="Home" /> | <img src="images/20260609-122242.460-2.jpg" width="180" alt="Vocabulary" /> | <img src="images/20260609-122242.460-3.jpg" width="180" alt="Word details" /> | <img src="images/20260609-122242.460-4.jpg" width="180" alt="Flashcard review" /> | <img src="images/20260609-122242.460-5.jpg" width="180" alt="Sync settings" /> |
 
 ---
 
-## 安装与构建
+## Installation and Build
 
-### 浏览器扩展
+### Browser Extension
 
-1. 下载或克隆本仓库
-2. 打开 Chrome，访问 `chrome://extensions/`
-3. 打开右上角的 **开发者模式**
-4. 点击 **加载已解压的扩展程序**，选择 `extension` 文件夹
-5. 扩展图标会出现在工具栏中
+1. Download or clone this repository.
+2. Open Chrome and visit `chrome://extensions/`.
+3. Enable **Developer mode** in the upper-right corner.
+4. Click **Load unpacked** and select the `extension` folder.
+5. The extension icon will appear in the toolbar.
 
 ### Android
 
-1. 用 Android Studio 打开 `android/` 目录（或直接用命令行）
-2. 构建 Debug 包：
+1. Open the `android/` directory in Android Studio (or use the command line).
+2. Build the debug APK:
    ```bash
    cd android && ./gradlew assembleDebug
    ```
-3. 通过 adb 安装到设备：
+3. Install it on a device using adb:
    ```bash
    adb install app/build/outputs/apk/debug/app-debug.apk
    ```
-> 构建 Release（签名）包需要在 `android/keystore.properties` 中配置签名信息（该文件不提交到 git）。
+> Building a signed release APK requires signing information in `android/keystore.properties` (this file is not committed to Git).
 
 ### iOS
 
-iOS 端使用 CocoaPods 管理依赖：
+The iOS app uses CocoaPods to manage dependencies:
 
-1. 安装依赖：
+1. Install dependencies:
    ```bash
    cd ios && pod install
    ```
-2. 用 Xcode 打开 **`ios/VocabReview.xcworkspace`**（注意是 `.xcworkspace`，不是 `.xcodeproj`）
-3. 选择目标设备，运行
+2. Open **`ios/VocabReview.xcworkspace`** in Xcode (the `.xcworkspace`, not the `.xcodeproj`).
+3. Select the target device and run the app.
 
 ---
 
-## 配置
+## Configuration
 
-点击扩展图标 → **⚙️ 设置** 打开设置页。
+Click the extension icon, then **⚙️ Configure API Key / Gist** to open Settings.
 
 ### DeepSeek API Key
 
-扩展使用 [DeepSeek](https://platform.deepseek.com/) 提供 AI 释义和翻译。
+The extension uses [DeepSeek](https://platform.deepseek.com/) for AI definitions and translations.
 
-1. 访问 [https://platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys)
-2. 创建一个新的 API Key
-3. 粘贴到设置页的 **DeepSeek API Key** 字段
-4. 点击 **保存**
+1. Visit [https://platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys).
+2. Create a new API key.
+3. Paste it into the **DeepSeek API Key** field in Settings.
+4. Click **Save Settings**.
 
-### GitHub Gist 同步（可选）
+### GitHub Gist Sync (Optional)
 
-把生词同步到私有 GitHub Gist，可用于备份并在多设备间共享。
+Sync your vocabulary to a secret GitHub Gist for backup and sharing across devices.
 
-#### 第一步 —— 创建 GitHub Personal Access Token
+#### Step 1 — Create a GitHub Personal Access Token
 
-1. 访问 [https://github.com/settings/tokens](https://github.com/settings/tokens)
-2. 点击 **Generate new token (classic)**
-3. 取个名字，例如 `vocab-learner`
-4. 在 **Scopes** 中只勾选 **`gist`**
-5. 点击 **Generate token** 并复制（只会显示一次）
+1. Visit [https://github.com/settings/tokens](https://github.com/settings/tokens).
+2. Click **Generate new token (classic)**.
+3. Give it a name, such as `vocab-learner`.
+4. Under **Scopes**, select only **`gist`**.
+5. Click **Generate token** and copy it (it will only be shown once).
 
-#### 第二步 —— 在扩展中保存 Token
+#### Step 2 — Save the Token in the Extension
 
-1. 打开扩展设置页
-2. 把 Token 粘贴到 **GitHub Token** 字段
-3. 点击 **保存**
+1. Open the extension's Settings page.
+2. Paste the token into the **GitHub Token** field.
+3. Click **Save Settings**.
 
-扩展会在下次保存单词时自动创建一个名为 `vocab-learner.json` 的私有 Gist，并在每次操作后 5 秒同步一次。
+The extension will automatically create a secret Gist containing `vocab-learner.json` the next time you save a word and sync changes after a 5-second delay.
 
-#### 第三步 —— 多设备同步（可选）
+#### Step 3 — Sync Across Devices (Optional)
 
-要在另一台设备上使用同一份生词：
+To use the same vocabulary on another device:
 
-1. 找到你的 Gist ID —— 访问 [https://gist.github.com](https://gist.github.com)，打开 `vocab-learner.json` 对应的 gist，从 URL 中复制 ID（用户名后面那串长字符）
-2. 在第二台设备的扩展设置中，同时填入 GitHub Token 和 **Gist ID** 字段
-3. 点击 **从 Gist 拉取** 导入已有生词
+1. Find your Gist ID: visit [https://gist.github.com](https://gist.github.com), open the Gist containing `vocab-learner.json`, and copy the ID from the URL (the long string after your username).
+2. Enter both the GitHub token and **Gist ID** in the extension settings on the second device.
+3. Click **Pull from Gist Now** to import your existing vocabulary.
 
 ---
 
-## 使用方法
+## Usage
 
-| 操作 | 方式 |
+| Action | How |
 |---|---|
-| 查看已保存的生词 | 点击网页上带下划线的单词 |
-| 查询任意单词 | 选中单词 → 点击 **Aa** 图标 |
-| 翻译一句话 | 选中文本 → 点击 **译** 图标 |
-| 保存单词 | 在任意弹窗中点击 **📌 生词本** |
-| 标记为已掌握 | 在任意弹窗中点击 **✓ 已掌握** |
-| 复习到期生词 | 点击扩展图标 → **🧠 开始复习** |
-| 查看生词本 | 点击扩展图标 → **📚 生词本** |
+| View a saved word | Click an underlined word on a web page |
+| Look up any word | Select the word, then click the **Aa** icon |
+| Translate a sentence | Select the text, then click the **Tr** icon |
+| Save a word | Click **📌 Vocabulary** in any popup |
+| Mark as mastered | Click **✓ Mastered** in any popup |
+| Review due words | Click the extension icon, then **🧠 Start Review** |
+| View vocabulary | Click the extension icon, then **📖 Vocabulary & Statistics** |
 
 ---
 
-## 间隔重复算法
+## Spaced Repetition Algorithm
 
-复习系统采用基于间隔的间隔重复算法。复习一个单词时，从三种反馈中选择一个：
+The review system uses an interval-based spaced repetition algorithm. Choose one of three ratings when reviewing a word:
 
-| 反馈 | 含义 | 下次复习 | 效果 |
+| Rating | Meaning | Next Review | Effect |
 |------|------|----------|------|
-| **忘了** | 完全不记得 | 10 分钟后 | 间隔重置为 0，忘记次数 +1 |
-| **模糊** | 费力才想起来 | 明天 | 间隔设为 1 天 |
-| **记得** | 轻松想起来 | 渐进间隔 | 间隔增长，记得次数 +1 |
+| **Forgot** | Cannot remember at all | In 10 minutes | Reset the interval to 0; increment miss count |
+| **Hard** | Recalled with effort | Tomorrow | Set the interval to 1 day |
+| **Got It** | Recalled easily | Progressive interval | Increase the interval; increment correct count |
 
-### 「记得」间隔递增
+### Progressive Intervals for Remembered Words
 
-每连续点击一次「记得」，间隔按以下规则递增：
+Each consecutive Got It rating increases the interval according to this sequence:
 
-`1 → 3 → 7 → 14 → 30 → 60 → 120 天`
+`1 → 3 → 7 → 14 → 30 → 60 → 120 days`
 
-### 其他操作
+### Other Actions
 
-| 操作 | 效果 |
+| Action | Effect |
 |------|------|
-| **跳过** | 推迟 4 小时，不改变统计 |
-| **已掌握** | 永久移出复习队列 |
+| **Later** | Postpone for 4 hours without changing statistics |
+| **Mastered** | Permanently remove the word from the review queue |
 
 ---
 
-## 技术栈
+## Technology Stack
 
-- **浏览器扩展**：Chrome Extension Manifest V3、原生 JS（无框架）
-- **Android**：Kotlin、Jetpack Compose
-- **iOS**：Swift、UIKit、CocoaPods
-- **AI 能力**：[DeepSeek API](https://platform.deepseek.com/)
-- **云同步**：GitHub Gist API
+- **Browser extension**: Chrome Extension Manifest V3, vanilla JavaScript (no framework)
+- **Android**: Kotlin, Jetpack Compose
+- **iOS**: Swift, UIKit, CocoaPods
+- **AI**: [DeepSeek API](https://platform.deepseek.com/)
+- **Cloud sync**: GitHub Gist API
 
 ---
 
-## 有问题，欢迎打扰
+## Questions and Feedback
 
-<img src="images/qr.jpg" alt="qa" width="240" />
+<img src="images/qr.jpg" alt="Contact QR code" width="240" />
 
-## 许可证
+## License
 
 MIT

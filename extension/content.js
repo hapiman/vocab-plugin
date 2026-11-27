@@ -1,51 +1,67 @@
 (function () {
   'use strict';
 
-  // 防止重复注入
+  // Prevent duplicate injection
   if (window.__vocabLearnerInit) return;
   window.__vocabLearnerInit = true;
 
   let wordStatus = {};
   let popupEl = null;
   let activeSpan = null;
-  let currentDef = null; // 当前 popup 的释义，供保存例句用
-  let learningRegexCache = null; // 已标记词/词组的合并正则缓存
-  let selectionIconEl = null; // 选中文字后显示的小图标
-  let pendingIconAction = null; // 点击图标时执行的回调
+  let currentDef = null; // Definition in the current popup, used when saving examples
+  let learningRegexCache = null; // Cached combined regex for marked words and phrases
+  let selectionIconEl = null; // Small icon shown after selecting text
+  let pendingIconAction = null; // Callback invoked when the icon is clicked
 
-  // ── 初始化 ─────────────────────────────────────────────────────────────
+  // ── Initialization ─────────────────────────────────────────────────────────────
 
   async function init() {
     try {
       const data = await chrome.runtime.sendMessage({ type: 'GET_INIT_DATA' });
       wordStatus = data.wordStatus || {};
     } catch (e) {
-      return; // 扩展未就绪时静默退出
+      return; // Exit silently if the extension is not ready
     }
 
     processNode(document.body);
 
-    // 监听动态内容
+    // Observe dynamic content
     const observer = new MutationObserver(mutations => {
       for (const m of mutations) {
+        // Text was modified directly (common in React): rescan its parent element
+        if (m.type === 'characterData') {
+          const el = m.target.parentElement;
+          if (el) processNode(el);
+          continue;
+        }
         for (const node of m.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             processNode(node);
+          } else if (node.nodeType === Node.TEXT_NODE && node.parentElement) {
+            // A text node was inserted into an existing element: scan its parent element
+            // (Use processNode rather than replaceTextNode to reuse skip rules.)
+            processNode(node.parentElement);
           }
         }
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
-    // 点击页面其他地方关闭弹窗
+    // Close the popup when clicking elsewhere on the page
     document.addEventListener('click', onDocClick, true);
-    // 选中文字后弹出查词菜单
-    document.addEventListener('mouseup', onSelectionEnd);
-    // 双击单词直接弹出释义
-    document.addEventListener('dblclick', onDblClickWord);
+    // Show the lookup menu after selecting text
+    // Listen during capture: some sites (such as X/Twitter) call
+    // stopPropagation on mouseup/dblclick during bubbling (to distinguish opening a post from
+    // selecting text), preventing document-level bubbling listeners from receiving the event.
+    document.addEventListener('mouseup', onSelectionEnd, true);
+    // Double-click a word to show its definition
+    document.addEventListener('dblclick', onDblClickWord, true);
+    window.addEventListener('resize', () => {
+      if (popupEl) keepPopupInViewport(popupEl);
+    });
   }
 
-  // ── DOM 处理 ───────────────────────────────────────────────────────────
+  // ── DOM processing ───────────────────────────────────────────────────────────
 
   const SKIP_TAGS = new Set([
     'script','style','noscript','textarea','input','select','code','pre',
@@ -55,13 +71,13 @@
   function processNode(root, fullRescan = false) {
     if (!root || root.nodeType !== Node.ELEMENT_NODE) return;
 
-    // 全量重扫时，先把已有的 vocab-word span 还原为文本节点，
-    // 避免之前单独标记的词把短语拆散导致短语无法匹配
+    // Before a full rescan, restore existing vocab-word spans to text nodes
+    // so individually marked words do not split phrases and prevent matching.
     if (fullRescan) {
       root.querySelectorAll('.vocab-word').forEach(span => {
         span.replaceWith(document.createTextNode(span.textContent));
       });
-      root.normalize(); // 合并相邻文本节点
+      root.normalize(); // Merge adjacent text nodes
     }
 
     const walker = document.createTreeWalker(
@@ -74,8 +90,11 @@
           if (el.closest('.vocab-popup')) return NodeFilter.FILTER_REJECT;
           if (el.classList.contains('vocab-word')) return NodeFilter.FILTER_REJECT;
           if (SKIP_TAGS.has(el.tagName.toLowerCase())) return NodeFilter.FILTER_REJECT;
-          // 跳过可编辑区域
-          if (el.isContentEditable || el.closest('[contenteditable]')) return NodeFilter.FILTER_REJECT;
+          // Skip genuinely editable areas (such as the post composer). Use isContentEditable rather than
+          // closest('[contenteditable]'): the latter also matches contenteditable="false",
+          // and X/Twitter uses read-only contenteditable="false" containers
+          // for post text, which would otherwise be skipped entirely.
+          if (el.isContentEditable) return NodeFilter.FILTER_REJECT;
           if (node.textContent.trim().length === 0) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
@@ -90,7 +109,7 @@
 
   const WORD_RE = /\b([a-zA-Z][a-zA-Z']{2,})\b/g;
 
-  // 根据 wordStatus 构建合并正则（多词词组排前面，保证优先匹配）
+  // Build a combined regex from wordStatus, prioritizing multi-word phrases.
   function buildLearningRegex() {
     if (learningRegexCache) return learningRegexCache;
     const entries = Object.entries(wordStatus)
@@ -101,7 +120,11 @@
     const pattern = entries
       .map(e => e.trim().split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'))
       .join('|');
-    learningRegexCache = new RegExp(`(?<![a-zA-Z])(${pattern})(?![a-zA-Z])`, 'gi');
+    try {
+      learningRegexCache = new RegExp(`(?<![a-zA-Z])(${pattern})(?![a-zA-Z])`, 'gi');
+    } catch (e) {
+      return null; // Avoid crashing if a word produces an invalid regex
+    }
     return learningRegexCache;
   }
 
@@ -146,11 +169,11 @@
     try {
       textNode.parentNode.replaceChild(frag, textNode);
     } catch (e) {
-      // DOM 结构已变化，忽略
+      // DOM structure changed; ignore
     }
   }
 
-  // ── 鼠标事件 ───────────────────────────────────────────────────────────
+  // ── Mouse events ───────────────────────────────────────────────────────────
 
   let wordClickTimer = null;
 
@@ -158,7 +181,7 @@
     e.stopPropagation();
     const span = e.currentTarget;
 
-    // 延迟执行，给 dblclick 机会取消
+    // Delay execution so dblclick can cancel it
     if (wordClickTimer) { clearTimeout(wordClickTimer); wordClickTimer = null; }
     wordClickTimer = setTimeout(() => {
       wordClickTimer = null;
@@ -171,7 +194,7 @@
     }, 200);
   }
 
-  // ── 选中图标 ───────────────────────────────────────────────────────────
+  // ── Selection icon ───────────────────────────────────────────────────────────
 
   function showSelectionIcon(type, rect, onClick) {
     removePopup();
@@ -180,15 +203,16 @@
     pendingIconAction = onClick;
     selectionIconEl = document.createElement('div');
     selectionIconEl.className = 'vocab-selection-icon';
-    selectionIconEl.textContent = type === 'word' ? 'Aa' : '译';
+    selectionIconEl.textContent = type === 'word' ? 'Aa' : 'Tr';
     selectionIconEl.dataset.type = type;
 
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    const top = rect.top + scrollY - 36;
-    const left = Math.min(rect.right + scrollX + 6, window.innerWidth + scrollX - 48);
+    // Use viewport coordinates (position: fixed), without scroll offsets.
+    // Some SPAs (such as X/Twitter) scroll internal containers, so window.scrollY remains 0.
+    // Document coordinates could place the icon outside the viewport, making it invisible.
+    const top = rect.top - 36;
+    const left = Math.min(rect.right + 6, window.innerWidth - 48);
 
-    selectionIconEl.style.top = `${Math.max(scrollY + 4, top)}px`;
+    selectionIconEl.style.top = `${Math.max(4, top)}px`;
     selectionIconEl.style.left = `${left}px`;
 
     selectionIconEl.addEventListener('click', e => {
@@ -225,22 +249,23 @@
       <div class="vocab-popup-header">
         <span class="vocab-popup-word">${word}</span>
         <span class="vocab-popup-phonetic"></span>
-        <button class="vocab-btn-refresh" title="AI 重新查询">🔄</button>
+        <button class="vocab-btn-refresh" title="Look Up Again with AI">🔄</button>
       </div>
       <div class="vocab-popup-body">
-        <div class="vocab-popup-loading">查询中...</div>
+        <div class="vocab-popup-loading">Looking up...</div>
       </div>
       <div class="vocab-popup-actions">
-        <button class="vocab-btn vocab-btn-learn" title="加入生词本，稍后复习">📌 生词本</button>
-        <button class="vocab-btn vocab-btn-master" title="已掌握，不再标记">✓ 已掌握</button>
-        <button class="vocab-btn vocab-btn-save-example" title="保存当前例句">💾</button>
+        <button class="vocab-btn vocab-btn-learn" title="Save to Vocabulary for Later Review">📌 Vocabulary</button>
+        <button class="vocab-btn vocab-btn-master" title="Mastered; Stop Highlighting">✓ Mastered</button>
+        <button class="vocab-btn vocab-btn-save-example" title="Save Current Example Sentence">💾</button>
       </div>
     `;
 
     document.body.appendChild(popupEl);
+    enablePopupDrag(popupEl);
     positionPopup(span);
 
-    // 点击 popup 内部不触发 onDocClick
+    // Clicks inside the popup do not trigger onDocClick
     popupEl.addEventListener('click', e => e.stopPropagation());
 
     popupEl.querySelector('.vocab-btn-learn').addEventListener('click', () => {
@@ -256,7 +281,7 @@
     const context = getSentenceContext(span);
     const doAiFetch = () => {
       if (!popupEl) return;
-      popupEl.querySelector('.vocab-popup-body').innerHTML = '<div class="vocab-popup-loading">查询中...</div>';
+      popupEl.querySelector('.vocab-popup-body').innerHTML = '<div class="vocab-popup-loading">Looking up...</div>';
       chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word, context }).then(def => {
         currentDef = def;
         updatePopupBody(def);
@@ -264,7 +289,7 @@
     };
     popupEl.querySelector('.vocab-btn-refresh').addEventListener('click', doAiFetch);
 
-    // 有缓存释义则直接显示，否则自动调 AI
+    // Show the cached definition if present; otherwise call AI automatically
     const cached = wordStatus[word];
     if (cached?.definition) {
       updatePopupBody({ phonetic: cached.phonetic || '', definition: cached.definition });
@@ -277,29 +302,69 @@
     positionPopupByRect(anchor.getBoundingClientRect());
   }
 
-  function positionPopupByRect(rect) {
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
+  function movePopupWithinViewport(popup, left, top) {
+    const margin = 8;
+    const maxLeft = Math.max(margin, window.innerWidth - popup.offsetWidth - margin);
+    const maxTop = Math.max(margin, window.innerHeight - popup.offsetHeight - margin);
+    popup.style.left = `${Math.max(margin, Math.min(left, maxLeft))}px`;
+    popup.style.top = `${Math.max(margin, Math.min(top, maxTop))}px`;
+  }
 
-    popupEl.style.top = '-9999px';
-    popupEl.style.left = '0px';
+  function keepPopupInViewport(popup) {
+    movePopupWithinViewport(popup, parseFloat(popup.style.left), parseFloat(popup.style.top));
+  }
 
-    requestAnimationFrame(() => {
-      if (!popupEl) return;
-      const popupW = popupEl.offsetWidth || 300;
-      const popupH = popupEl.offsetHeight || 160;
+  function enablePopupDrag(popup) {
+    const handle = popup.querySelector('.vocab-popup-header, .vocab-popup-src');
+    handle.title = 'Drag to move';
+    let drag = null;
 
-      let left = rect.left + scrollX;
-      if (left + popupW > window.innerWidth + scrollX - 8) left = window.innerWidth + scrollX - popupW - 8;
-      if (left < scrollX + 8) left = scrollX + 8;
-
-      const top = (rect.top > popupH + 12)
-        ? rect.top + scrollY - popupH - 8
-        : rect.bottom + scrollY + 8;
-
-      popupEl.style.left = `${left}px`;
-      popupEl.style.top = `${top}px`;
+    handle.addEventListener('pointerdown', e => {
+      if (!e.isPrimary || e.button !== 0 || e.target.closest('button, a, input')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      drag = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        left: parseFloat(popup.style.left),
+        top: parseFloat(popup.style.top),
+      };
+      popup.dataset.userMoved = 'true';
+      popup.classList.add('vocab-popup-dragging');
+      handle.setPointerCapture(e.pointerId);
     });
+
+    handle.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      movePopupWithinViewport(popup, drag.left + e.clientX - drag.x, drag.top + e.clientY - drag.y);
+    });
+
+    const stopDrag = e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag = null;
+      popup.classList.remove('vocab-popup-dragging');
+    };
+    handle.addEventListener('pointerup', stopDrag);
+    handle.addEventListener('pointercancel', stopDrag);
+    handle.addEventListener('lostpointercapture', stopDrag);
+  }
+
+  function positionPopupByRect(rect) {
+    const popup = popupEl;
+    if (!popup) return;
+    if (popup.dataset.userMoved) {
+      keepPopupInViewport(popup);
+      return;
+    }
+
+    // Use viewport coordinates (position: fixed), without scroll offsets, for the same reason as showSelectionIcon.
+    const popupH = popup.offsetHeight;
+    const top = (rect.top > popupH + 12)
+      ? rect.top - popupH - 8
+      : rect.bottom + 8;
+
+    movePopupWithinViewport(popup, rect.left, top);
   }
 
   function updatePopupBody(def) {
@@ -309,6 +374,7 @@
 
     if (def.error) {
       body.innerHTML = `<div class="vocab-popup-error">${def.error}</div>`;
+      keepPopupInViewport(popupEl);
       return;
     }
 
@@ -318,6 +384,7 @@
       <div class="vocab-popup-definition">${def.definition || ''}</div>
       ${def.example ? `<div class="vocab-popup-example">${def.example}</div>` : ''}
     `;
+    keepPopupInViewport(popupEl);
   }
 
   function removePopup() {
@@ -330,29 +397,29 @@
   }
 
   function onDocClick(e) {
-    // 点选中图标由图标自己处理
+    // The selection icon handles its own clicks
     if (selectionIconEl && selectionIconEl.contains(e.target)) return;
-    // 点 popup 内部不关闭
+    // Do not close on clicks inside the popup
     if (popupEl && popupEl.contains(e.target)) return;
-    // 点生词 span 由 onWordClick 处理
+    // onWordClick handles clicks on vocabulary spans
     if (e.target.classList.contains('vocab-word')) return;
 
-    // 仍有选区说明 mouseup 刚触发了图标，click 紧随其后不应关闭图标
+    // An active selection means mouseup just opened the icon; the following click should not close it.
     if (window.getSelection()?.toString().trim()) return;
 
     removeSelectionIcon();
     removePopup();
   }
 
-  // ── 标记操作 ───────────────────────────────────────────────────────────
+  // ── Marking operations ───────────────────────────────────────────────────────────
 
-  // 从 node 向上查找块级祖先，返回包含 word 的文本上下文
+  // Walk up from node to a block-level ancestor and return context containing word.
   function getBlockAncestorText(node, word) {
     if (!node) return '';
     const blockTags = new Set(['p','div','li','td','th','article','section','blockquote','dd','dt','h1','h2','h3','h4','h5','h6','pre','figcaption']);
     let el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
     const wordLower = word.toLowerCase();
-    // 先尝试直接父文本
+    // Try the immediate parent's text first
     while (el && el !== document.body) {
       if (blockTags.has(el.tagName.toLowerCase())) break;
       el = el.parentElement;
@@ -360,7 +427,7 @@
     if (!el || el === document.body) el = (node.nodeType === Node.TEXT_NODE ? node.parentElement : node);
     const text = el?.textContent || '';
     if (text.toLowerCase().indexOf(wordLower) !== -1) return text;
-    // 块级元素内找不到，向上再找一层
+    // If not found in the block element, try one level higher
     if (el?.parentElement && el.parentElement !== document.body) {
       const upperText = el.parentElement.textContent || '';
       if (upperText.toLowerCase().indexOf(wordLower) !== -1) return upperText;
@@ -373,7 +440,7 @@
     const wordLower = word.toLowerCase();
     let idx = textLower.indexOf(wordLower);
 
-    // 对多词短语，若精确匹配失败，尝试按词序逐词查找（覆盖词被其他内容隔开的情况）
+    // For multi-word phrases, if an exact match fails, search each word in order to handle intervening content.
     if (idx === -1 && (wordLower.includes(' ') || wordLower.includes('...') || wordLower.includes('…'))) {
       const parts = wordLower.split(/[\s.…]+/).filter(Boolean);
       let searchFrom = 0;
@@ -388,7 +455,7 @@
         searchFrom = lastEnd;
       }
       if (allFound && firstIdx !== -1) {
-        // 用第一个词的位置作为锚点，截取到最后一个词结束
+        // Anchor at the first word and extract through the end of the last word.
         idx = firstIdx;
         const before = text.slice(0, idx);
         const sentenceStartMatch = before.search(/[.!?。！？\n][^.!?。！？\n]*$/);
@@ -412,7 +479,7 @@
 
   function getSentenceContext(span) {
     const word = span.textContent;
-    // 向上查找包含完整句子的块级祖先，避免直接父元素太窄导致取不到上下文
+    // Find a block-level ancestor with the full sentence; the immediate parent may be too narrow for context.
     const blockTags = new Set(['p','div','li','td','th','article','section','blockquote','dd','dt','h1','h2','h3','h4','h5','h6','pre','figcaption']);
     let el = span.parentElement;
     while (el && el !== document.body) {
@@ -421,7 +488,7 @@
     }
     if (!el || el === document.body) el = span.parentElement;
     const parentText = el?.textContent || '';
-    // 如果在当前块级元素中找不到单词，再尝试向上一层
+    // If the word is absent from the current block, try one level higher.
     if (parentText.toLowerCase().indexOf(word.toLowerCase()) === -1 && el?.parentElement) {
       const upperText = el.parentElement.textContent || '';
       if (upperText.toLowerCase().indexOf(word.toLowerCase()) !== -1) {
@@ -432,7 +499,7 @@
   }
 
   function getContext(span) {
-    // 提取所在句子作为上下文
+    // Extract the containing sentence as context
     const sentence = getSentenceContext(span);
     return {
       sentence,
@@ -446,16 +513,16 @@
     await chrome.runtime.sendMessage({ type: 'MARK_WORD', word, status, context });
 
     wordStatus[word] = { status };
-    learningRegexCache = null; // 词库变了，重建正则
+    learningRegexCache = null; // Vocabulary changed; rebuild the regex
 
     if (status === 'mastered') {
-      // 移除所有该词的下划线
+      // Remove all underlines for this word
       document.querySelectorAll(`.vocab-word[data-word="${word}"]`).forEach(el => {
         const text = document.createTextNode(el.textContent);
         el.parentNode.replaceChild(text, el);
       });
     } else if (status === 'learning') {
-      // 全量重扫：先还原已有 span 再重建，避免短语被单词 span 拆散
+      // Full rescan: restore existing spans before rebuilding so word spans do not split phrases.
       processNode(document.body, true);
     }
 
@@ -466,23 +533,23 @@
     const context = getContext(span);
     await chrome.runtime.sendMessage({ type: 'MARK_WORD', word, status: wordStatus[word]?.status || 'learning', context });
 
-    // 显示保存成功提示
+    // Show a save confirmation
     const actions = popupEl?.querySelector('.vocab-popup-actions');
     if (actions) {
       const tip = document.createElement('div');
       tip.className = 'vocab-popup-saved-tip';
-      tip.textContent = '例句已保存 ✓';
+      tip.textContent = 'Example saved ✓';
       popupEl.insertBefore(tip, actions);
       setTimeout(() => tip.remove(), 1500);
     }
   }
 
-  // ── 选中查词 ───────────────────────────────────────────────────────────
+  // ── Lookup from selection ───────────────────────────────────────────────────────────
 
   function isEnglishPage() {
     const lang = (document.documentElement.lang || '').toLowerCase();
     if (lang) return lang.startsWith('en');
-    // 无 lang 属性时，采样页面文本判断
+    // Sample page text to detect the language when lang is absent
     const sample = (document.body?.innerText || '').replace(/\s+/g, '').slice(0, 400);
     if (!sample) return false;
     const nonAscii = (sample.match(/[^\x00-\x7F]/g) || []).length;
@@ -490,10 +557,10 @@
   }
 
   function onDblClickWord(e) {
-    // 取消单击延迟，防止闪烁
+    // Cancel single-click delay to prevent flickering
     if (wordClickTimer) { clearTimeout(wordClickTimer); wordClickTimer = null; }
 
-    // 不干扰弹窗内部交互
+    // Do not interfere with interactions inside the popup
     if (popupEl && popupEl.contains(e.target)) return;
     if (selectionIconEl && selectionIconEl.contains(e.target)) return;
 
@@ -501,7 +568,7 @@
     const selectedText = selection?.toString().trim();
     if (!selectedText) return;
 
-    // 只处理单个英文单词
+    // Handle only a single English word
     if (!/^[a-zA-Z][a-zA-Z'-]{1,29}$/.test(selectedText)) return;
 
     const normalizedWord = selectedText.toLowerCase();
@@ -512,7 +579,7 @@
     } catch { return; }
     if (!rect || rect.width === 0) return;
 
-    // 提取所在句子作为上下文：优先从块级祖先获取，确保包含目标词
+    // Extract the containing sentence as context, preferring a block-level ancestor that includes the target word.
     const contextText = getBlockAncestorText(selection?.anchorNode, normalizedWord);
     const context = {
       sentence: extractSentenceAround(contextText, normalizedWord),
@@ -528,7 +595,7 @@
   function onSelectionEnd(e) {
     if (selectionIconEl && selectionIconEl.contains(e.target)) return;
     if (popupEl && popupEl.contains(e.target)) return;
-    if (e.target.classList.contains('vocab-word')) return;
+    if (e.target && e.target.classList && e.target.classList.contains('vocab-word')) return;
 
     const selection = window.getSelection();
     const selectedText = selection?.toString().trim();
@@ -538,7 +605,7 @@
     try {
       const range = selection.getRangeAt(0);
       rect = range.getBoundingClientRect();
-      // 多行选区 getBoundingClientRect 有时返回 width=0，改用最后一个 clientRect
+      // getBoundingClientRect may return width=0 for multi-line selections; use the last clientRect instead.
       if (!rect || rect.width === 0) {
         const rects = range.getClientRects();
         if (rects.length > 0) rect = rects[rects.length - 1];
@@ -546,13 +613,13 @@
     } catch (e) { return; }
     if (!rect || rect.width === 0) return;
 
-    // 纯英文单词（含连字符）→ 查词；纯英文短语（≤6词）→ 查词
+    // English words (including hyphens) and English phrases (up to 6 words): look up definitions.
     const isWord = /^[a-zA-Z][a-zA-Z'-]{1,29}$/.test(selectedText);
     const isEnPhrase = !isWord && /^[a-zA-Z][a-zA-Z' -]*[a-zA-Z]$/.test(selectedText) && selectedText.split(/\s+/).length <= 6;
     if (isWord || isEnPhrase) {
       const normalizedWord = selectedText.toLowerCase().replace(/\s+/g, ' ');
       if (wordStatus[normalizedWord]?.status === 'learning') return;
-      // 从块级祖先获取上下文，确保包含目标词
+      // Get context from a block-level ancestor that includes the target word.
       const contextText = getBlockAncestorText(selection?.anchorNode, normalizedWord);
       const capturedContext = {
         sentence: extractSentenceAround(contextText, normalizedWord),
@@ -561,7 +628,7 @@
       };
       showSelectionIcon('word', rect, () => showSelectionPopup(normalizedWord, rect, capturedContext));
     } else if (selectedText.length >= 4) {
-      // 检查选中文本本身是否为英文（而非页面语言），避免中文页面误触发
+      // Check whether selected text itself is English, rather than the page language, to avoid false triggers on Chinese pages.
       const nonAscii = (selectedText.match(/[^\x00-\x7F]/g) || []).length;
       const isEnglishContent = nonAscii / selectedText.replace(/\s/g, '').length < 0.15;
       if (isEnglishContent) {
@@ -582,17 +649,18 @@
       <div class="vocab-popup-header">
         <span class="vocab-popup-word">${word}</span>
         <span class="vocab-popup-phonetic"></span>
-        <button class="vocab-btn-refresh" title="AI 重新查询">🔄</button>
+        <button class="vocab-btn-refresh" title="Look Up Again with AI">🔄</button>
       </div>
       <div class="vocab-popup-body">
-        <div class="vocab-popup-loading">查询中...</div>
+        <div class="vocab-popup-loading">Looking up...</div>
       </div>
       <div class="vocab-popup-actions">
-        <button class="vocab-btn vocab-btn-learn" title="加入生词本">📌 生词本</button>
-        <button class="vocab-btn vocab-btn-master" title="标记为已掌握">✓ 已掌握</button>
+        <button class="vocab-btn vocab-btn-learn" title="Save to Vocabulary">📌 Vocabulary</button>
+        <button class="vocab-btn vocab-btn-master" title="Mark as Mastered">✓ Mastered</button>
       </div>
     `;
     document.body.appendChild(popupEl);
+    enablePopupDrag(popupEl);
     positionPopupByRect(selectionRect);
 
     const context = capturedContext || {
@@ -612,7 +680,7 @@
 
     const doAiFetch = () => {
       if (!popupEl) return;
-      popupEl.querySelector('.vocab-popup-body').innerHTML = '<div class="vocab-popup-loading">查询中...</div>';
+      popupEl.querySelector('.vocab-popup-body').innerHTML = '<div class="vocab-popup-loading">Looking up...</div>';
       chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word, context: context.sentence }).then(def => {
         currentDef = def;
         updatePopupBody(def);
@@ -620,7 +688,7 @@
     };
     popupEl.querySelector('.vocab-btn-refresh').addEventListener('click', doAiFetch);
 
-    // 有缓存释义则直接显示，否则自动调 AI
+    // Show the cached definition if present; otherwise call AI automatically
     const cached = wordStatus[word];
     if (cached?.definition) {
       updatePopupBody({ phonetic: cached.phonetic || '', definition: cached.definition });
@@ -639,39 +707,42 @@
     popupEl.innerHTML = `
       <div class="vocab-popup-src">${escHtml(text.length > 100 ? text.slice(0, 100) + '…' : text)}</div>
       <div class="vocab-popup-body">
-        <div class="vocab-popup-loading">翻译中...</div>
+        <div class="vocab-popup-loading">Translating...</div>
       </div>
       <div class="vocab-popup-actions">
-        <button class="vocab-btn vocab-btn-learn">📌 生词本</button>
-        <button class="vocab-btn vocab-btn-master">✓ 已掌握</button>
+        <button class="vocab-btn vocab-btn-learn">📌 Vocabulary</button>
+        <button class="vocab-btn vocab-btn-master">✓ Mastered</button>
       </div>
     `;
     popupEl.addEventListener('click', e => e.stopPropagation());
     document.body.appendChild(popupEl);
+    enablePopupDrag(popupEl);
     positionPopupByRect(selectionRect);
 
     const context = { sentence: extractSentenceAround(surroundingText || text, normalizedPhrase), url: location.href, date: new Date().toISOString().slice(0, 10) };
     const savePhrase = async (status) => {
       await markWord(normalizedPhrase, status, null, context);
-      // 异步获取释义并存储（markWord 已完成，saveDefinition 能找到该词）
+      // Fetch and store the definition asynchronously (markWord has completed, so saveDefinition can find the word).
       chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word: normalizedPhrase, context: context.sentence });
     };
     popupEl.querySelector('.vocab-btn-learn').addEventListener('click', () => savePhrase('learning'));
     popupEl.querySelector('.vocab-btn-master').addEventListener('click', () => savePhrase('mastered'));
 
+    const translationPopup = popupEl;
     chrome.runtime.sendMessage({ type: 'TRANSLATE_TEXT', text, context: surroundingText })
       .then(result => {
-        if (!popupEl) return;
-        const body = popupEl.querySelector('.vocab-popup-body');
+        if (popupEl !== translationPopup) return;
+        const body = translationPopup.querySelector('.vocab-popup-body');
         if (result.error) {
           body.innerHTML = `<div class="vocab-popup-error">${result.error}</div>`;
+          positionPopupByRect(selectionRect);
           return;
         }
         const phrasesHtml = (result.phrases || []).map((p, i) => `
           <div class="vocab-phrase-row" data-idx="${i}">
             <span class="vocab-phrase-en">${escHtml(p.en)}</span>
             <span class="vocab-phrase-zh">${escHtml(p.zh)}</span>
-            <button class="vocab-phrase-pin" data-phrase="${escHtml(p.en)}" title="加入生词本">📌</button>
+            <button class="vocab-phrase-pin" data-phrase="${escHtml(p.en)}" title="Save to Vocabulary">📌</button>
           </div>
         `).join('');
 
@@ -680,7 +751,7 @@
           ${phrasesHtml ? `<div class="vocab-phrases">${phrasesHtml}</div>` : ''}
         `;
 
-        // 绑定词组 📌 按钮
+        // Bind phrase pin buttons
         body.querySelectorAll('.vocab-phrase-pin').forEach(btn => {
           btn.addEventListener('click', async e => {
             e.stopPropagation();
@@ -695,13 +766,13 @@
             btn.textContent = '✓';
             btn.disabled = true;
             btn.classList.add('vocab-phrase-pin-saved');
-            // 后台异步获取释义并保存，不影响当前交互
+            // Fetch and save definitions asynchronously in the background without interrupting interaction.
             chrome.runtime.sendMessage({ type: 'GET_DEFINITION', word: phrase, context: extractSentenceAround(text, phrase) });
-            // 不关闭弹窗，让用户继续点其他词组
+            // Keep the popup open so the user can select other phrases.
           });
         });
 
-        // 重新定位（内容变多了，高度变了）
+        // Reposition after content and height increase
         positionPopupByRect(selectionRect);
       });
   }
@@ -710,14 +781,14 @@
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── Storage 变化监听（Gist 同步 / 其他页面操作） ─────────────────────────
+  // ── Storage change listener (Gist sync / actions on other pages) ─────────────────────────
 
   chrome.storage.onChanged.addListener((changes) => {
     if (!changes.words) return;
     const newWords = changes.words.newValue || {};
     const oldWords = changes.words.oldValue || {};
 
-    // 找出被删除或改为 mastered 的词 → 移除页面划线
+    // Remove underlines for words deleted or changed to mastered.
     for (const word of Object.keys(oldWords)) {
       const wasLearning = oldWords[word]?.status === 'learning';
       const nowGone = !newWords[word] || newWords[word].status !== 'learning';
@@ -728,11 +799,11 @@
       }
     }
 
-    // 更新本地缓存
+    // Update local cache
     wordStatus = newWords;
     learningRegexCache = null;
 
-    // 找出新增的 learning 词 → 扫描页面添加划线
+    // Find newly learning words and scan the page to underline them.
     const newlyLearning = Object.keys(newWords).filter(
       w => newWords[w]?.status === 'learning' && oldWords[w]?.status !== 'learning'
     );
@@ -741,7 +812,7 @@
     }
   });
 
-  // ── 启动 ───────────────────────────────────────────────────────────────
+  // ── Startup ───────────────────────────────────────────────────────────────
 
   init();
 })();

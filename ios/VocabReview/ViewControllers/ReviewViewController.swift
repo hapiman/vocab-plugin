@@ -50,7 +50,7 @@ final class ReviewViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "复习"
+        title = "Review"
         view.backgroundColor = Theme.Colors.pageBackground
         setupViews()
         setupSwipeGestures()
@@ -78,7 +78,7 @@ final class ReviewViewController: UIViewController {
         cardView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(cardView)
 
-        emptyView.configure(title: "暂无到期单词", message: "PC 浏览器扩展收词后，手机端会从 Gist 同步复习队列。")
+        emptyView.configure(title: "No Words Due", message: "After the desktop browser extension saves words, the mobile app syncs the review queue from Gist.")
         emptyView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(emptyView)
 
@@ -89,9 +89,9 @@ final class ReviewViewController: UIViewController {
         actionStack.isHidden = true
 
         let outcomes: [(String, String, UIColor, ReviewOutcome)] = [
-            ("忘了", "xmark.circle.fill", Theme.Colors.statDue, .miss),
-            ("模糊", "questionmark.circle.fill", .systemOrange, .hard),
-            ("记得", "checkmark.circle.fill", Theme.Colors.statMastered, .good)
+            ("Forgot", "xmark.circle.fill", Theme.Colors.statDue, .miss),
+            ("Hard", "questionmark.circle.fill", .systemOrange, .hard),
+            ("Got It", "checkmark.circle.fill", Theme.Colors.statMastered, .good)
         ]
 
         outcomes.forEach { title, icon, color, outcome in
@@ -112,7 +112,7 @@ final class ReviewViewController: UIViewController {
 
         // Hint label
         let hintLabel = UILabel()
-        hintLabel.text = "点击卡片翻转 · 左右滑动切换"
+        hintLabel.text = "Tap to flip · Swipe to switch"
         hintLabel.font = Theme.Font.small
         hintLabel.textColor = Theme.Colors.subtleText.withAlphaComponent(0.5)
         hintLabel.textAlignment = .center
@@ -282,7 +282,7 @@ final class ReviewViewController: UIViewController {
         overlay.addSubview(checkmark)
 
         let label = UILabel()
-        label.text = "已掌握"
+        label.text = "Mastered"
         label.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         label.textColor = Theme.Colors.statMastered
         label.sizeToFit()
@@ -336,9 +336,9 @@ final class ReviewViewController: UIViewController {
         // Toggle button text - same as WordDetail primary button
         let isMastered = item.1.status == "mastered"
         if isMastered {
-            masteredButton.setTitle("重新学习", for: .normal)
+            masteredButton.setTitle("Relearn", for: .normal)
         } else {
-            masteredButton.setTitle("标记已掌握", for: .normal)
+            masteredButton.setTitle("Mark as Mastered", for: .normal)
         }
     }
 

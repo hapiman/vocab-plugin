@@ -3,7 +3,7 @@ platform :ios, '14.0'
 target 'VocabReview' do
   use_frameworks!
 
-  # 友盟基础库 + 统计分析
+  # Umeng core library and analytics
   pod 'UMCommon'
   pod 'UMDevice'
 

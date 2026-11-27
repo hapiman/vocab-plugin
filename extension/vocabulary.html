@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>生词本 - Vocab Learner</title>
+  <title>Vocabulary - Vocab Learner</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -179,7 +179,7 @@
     }
     .empty h2 { font-size: 16px; margin-bottom: 8px; color: #666; }
 
-    /* 分页 */
+    /* Pagination */
     .pagination {
       display: flex;
       align-items: center;
@@ -201,7 +201,7 @@
     .page-btn:disabled { opacity: 0.35; cursor: default; }
     .page-info { font-size: 13px; color: #999; }
 
-    /* 图表区域 */
+    /* Chart area */
     .chart-section {
       padding: 16px 24px;
     }
@@ -253,25 +253,25 @@
 </head>
 <body>
   <div class="header">
-    <h1>📚 生词本</h1>
-    <span class="learning-badge">学习中 <strong id="learningCount">0</strong></span>
-    <input type="text" class="search" id="search" placeholder="搜索单词..." />
+    <h1>📚 Vocabulary</h1>
+    <span class="learning-badge">Learning <strong id="learningCount">0</strong></span>
+    <input type="text" class="search" id="search" placeholder="Search words..." />
     <div class="tabs">
-      <button class="tab active" data-tab="list">单词列表</button>
-      <button class="tab" data-tab="stats">学习统计</button>
+      <button class="tab active" data-tab="list">Word List</button>
+      <button class="tab" data-tab="stats">Learning Statistics</button>
     </div>
   </div>
 
-  <!-- 单词列表 -->
+  <!-- Word List -->
   <div id="listView">
     <div class="word-list" id="wordList"></div>
     <div class="pagination" id="pagination"></div>
   </div>
 
-  <!-- 统计视图 -->
+  <!-- Statistics view -->
   <div id="statsView" style="display:none">
     <div class="chart-section">
-      <div class="chart-title">最近 14 天学习趋势（新增单词数）</div>
+      <div class="chart-title">Learning Trend Over the Last 14 Days (New Words)</div>
       <div class="chart-bars" id="trendChart"></div>
     </div>
   </div>

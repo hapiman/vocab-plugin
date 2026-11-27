@@ -19,15 +19,15 @@ class WordDetailViewModel : ViewModel() {
         val current = getWord(word) ?: return
         if (current.status == "mastered") {
             repo.updateStatus(word, "learning")
-            statusMessage = "已重新加入学习队列"
+            statusMessage = "Added back to the learning queue"
         } else {
             repo.updateStatus(word, "mastered")
-            statusMessage = "已标记为掌握"
+            statusMessage = "Marked as mastered"
         }
     }
 
     fun setDueToday(word: String) {
         repo.setDueNow(word)
-        statusMessage = "已设为今天复习"
+        statusMessage = "Scheduled for review today"
     }
 }

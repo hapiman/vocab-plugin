@@ -104,7 +104,7 @@ private fun CardFront(word: String, vocabWord: VocabWord) {
         if (!context.isNullOrBlank()) {
             Spacer(Modifier.height(Spacing.xxl))
             Text(
-                text = "例句",
+                text = "Example Sentence",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
@@ -125,14 +125,14 @@ private fun CardBack(word: String, vocabWord: VocabWord) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "释义",
+            text = "Definition",
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )
         Spacer(Modifier.height(Spacing.sm))
         Text(
-            text = vocabWord.definition ?: "暂无释义",
+            text = vocabWord.definition ?: "No definition yet",
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
@@ -143,7 +143,7 @@ private fun CardBack(word: String, vocabWord: VocabWord) {
         if (!context.isNullOrBlank()) {
             Spacer(Modifier.height(Spacing.xxl))
             Text(
-                text = "例句",
+                text = "Example Sentence",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)

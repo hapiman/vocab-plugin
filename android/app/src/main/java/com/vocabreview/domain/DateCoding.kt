@@ -43,7 +43,7 @@ object DateCoding {
     }
 
     fun formatDueDisplay(str: String?): String {
-        val instant = parseDue(str) ?: return "未设置"
+        val instant = parseDue(str) ?: return "Not Set"
         val local = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
         return local.format(localMinute)
     }

@@ -31,7 +31,7 @@ fun SettingsScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("设置") })
+            TopAppBar(title = { Text("Settings") })
         }
     ) { padding ->
         Column(
@@ -42,7 +42,7 @@ fun SettingsScreen(
                 .padding(horizontal = Spacing.xl, vertical = Spacing.lg)
         ) {
             Text(
-                text = "GitHub 同步设置",
+                text = "GitHub Sync Settings",
                 style = MaterialTheme.typography.headlineLarge
             )
 
@@ -73,7 +73,7 @@ fun SettingsScreen(
                     value = viewModel.gistId,
                     onValueChange = { viewModel.updateGistId(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Gist ID 或 URL") },
+                    label = { Text("Gist ID or URL") },
                     leadingIcon = { Icon(Icons.Default.Description, contentDescription = null) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     singleLine = true
@@ -83,14 +83,14 @@ fun SettingsScreen(
             Spacer(Modifier.height(Spacing.xxl))
 
             GradientButton(
-                text = "保存设置",
+                text = "Save Settings",
                 onClick = { viewModel.save() }
             )
 
             Spacer(Modifier.height(Spacing.md))
 
             SecondaryButton(
-                text = if (viewModel.isLoading) "拉取中..." else "从 Gist 拉取",
+                text = if (viewModel.isLoading) "Pulling..." else "Pull from Gist",
                 onClick = { viewModel.pullFromGist() },
                 enabled = !viewModel.isLoading
             )

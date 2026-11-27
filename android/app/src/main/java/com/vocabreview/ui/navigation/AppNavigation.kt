@@ -25,11 +25,11 @@ import com.vocabreview.ui.settings.SettingsScreen
 import com.vocabreview.ui.vocabulary.VocabularyScreen
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    data object Home : Screen("home", "复习", Icons.Default.Layers)
-    data object Vocabulary : Screen("vocabulary/{mode}", "词库", Icons.Default.Book) {
+    data object Home : Screen("home", "Review", Icons.Default.Layers)
+    data object Vocabulary : Screen("vocabulary/{mode}", "Vocabulary", Icons.Default.Book) {
         fun withMode(mode: String = "learning") = "vocabulary/$mode"
     }
-    data object Settings : Screen("settings", "设置", Icons.Default.Settings)
+    data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
     data object Review : Screen("review", "", Icons.Default.Layers)
     data object WordDetail : Screen("word_detail/{word}", "", Icons.Default.Book) {
         fun withWord(word: String) = "word_detail/${java.net.URLEncoder.encode(word, "UTF-8")}"

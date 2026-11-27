@@ -30,7 +30,7 @@ class SettingsViewModel : ViewModel() {
         val normalizedId = CredentialStore.normalizeGistId(gistId)
         CredentialStore.saveCredentials(token.trim(), normalizedId)
         gistId = normalizedId
-        statusMessage = "设置已保存"
+        statusMessage = "Settings saved"
         isError = false
     }
 
@@ -42,11 +42,11 @@ class SettingsViewModel : ViewModel() {
             isLoading = false
             result.fold(
                 onSuccess = {
-                    statusMessage = "拉取成功，共 ${repo.words.value.size} 个单词"
+                    statusMessage = "Pull successful: ${repo.words.value.size} words"
                     isError = false
                 },
                 onFailure = { e ->
-                    statusMessage = e.message ?: "拉取失败"
+                    statusMessage = e.message ?: "Pull failed"
                     isError = true
                 }
             )

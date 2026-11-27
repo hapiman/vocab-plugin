@@ -61,8 +61,8 @@ class VocabRepository private constructor(private val context: Context) {
     }
 
     suspend fun pullFromGist(): Result<Unit> {
-        val token = CredentialStore.getToken() ?: return Result.failure(Exception("未配置 Token"))
-        val gistId = CredentialStore.getGistId() ?: return Result.failure(Exception("未配置 Gist ID"))
+        val token = CredentialStore.getToken() ?: return Result.failure(Exception("Token not configured"))
+        val gistId = CredentialStore.getGistId() ?: return Result.failure(Exception("Gist ID not configured"))
 
         _isLoading.value = true
         _lastError.value = null
@@ -79,7 +79,7 @@ class VocabRepository private constructor(private val context: Context) {
             _lastSyncAt.value = DateCoding.nowMinute()
             Result.success(Unit)
         } catch (e: Exception) {
-            _lastError.value = e.message ?: "同步失败"
+            _lastError.value = e.message ?: "Sync failed"
             Result.failure(e)
         } finally {
             _isLoading.value = false
@@ -178,7 +178,7 @@ class VocabRepository private constructor(private val context: Context) {
                         needsPushAfterCurrentPush = true
                     }
                 } catch (e: Exception) {
-                    _lastError.value = "推送失败: ${e.message}"
+                    _lastError.value = "Push failed: ${e.message}"
                     break
                 }
             } while (needsPushAfterCurrentPush)

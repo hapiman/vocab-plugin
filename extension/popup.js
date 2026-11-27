@@ -1,20 +1,20 @@
 async function init() {
   await loadStats();
 
-  // 打开插件弹窗时拉取一次 Gist，确保 iOS 端的复习进度同步回浏览器。
-  setSyncStatus('同步 Gist 中...');
+  // Pull the Gist when opening the popup to sync iOS review progress back to the browser.
+  setSyncStatus('Syncing Gist...');
   try {
     const result = await chrome.runtime.sendMessage({ type: 'PULL_GIST' });
     if (result?.stats) renderStats(result.stats);
     if (result?.ok) {
-      const prefix = result.code === 'created' ? '已创建词库 ' : '已同步 ';
+      const prefix = result.code === 'created' ? 'Vocabulary created ' : 'Synced ';
       setSyncStatus(`${prefix}${formatTime(result.lastGistSync)}`);
     } else {
-      setSyncStatus(`同步失败：${result?.error || '未知错误'}`, true);
+      setSyncStatus(`Sync failed: ${result?.error || 'Unknown error'}`, true);
     }
   } catch (e) {
     console.warn('[VocabLearner] popup gist refresh failed:', e);
-    setSyncStatus(`同步失败：${e.message || '未知错误'}`, true);
+    setSyncStatus(`Sync failed: ${e.message || 'Unknown error'}`, true);
   }
 }
 

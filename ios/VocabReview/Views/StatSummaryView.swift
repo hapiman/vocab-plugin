@@ -10,17 +10,17 @@ final class StatSummaryView: UIView {
     private let stackView = UIStackView()
     private let dueCard = StatCardView(
         icon: "flame.fill",
-        label: "今日到期",
+        label: "Due Today",
         color: Theme.Colors.statDue
     )
     private let learningCard = StatCardView(
         icon: "book.fill",
-        label: "学习中",
+        label: "Learning",
         color: Theme.Colors.statLearning
     )
     private let masteredCard = StatCardView(
         icon: "checkmark.seal.fill",
-        label: "已掌握",
+        label: "Mastered",
         color: Theme.Colors.statMastered
     )
 

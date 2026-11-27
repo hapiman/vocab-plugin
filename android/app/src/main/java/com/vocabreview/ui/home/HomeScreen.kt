@@ -51,7 +51,7 @@ fun HomeScreen(
         )
         Spacer(Modifier.height(Spacing.xs))
         Text(
-            text = "今天也要坚持复习哦",
+            text = "Keep up your daily review!",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
@@ -66,7 +66,7 @@ fun HomeScreen(
             StatCard(
                 icon = Icons.Default.LocalFireDepartment,
                 value = viewModel.dueCount,
-                title = "今日到期",
+                title = "Due Today",
                 color = AppColors.StatDue,
                 onClick = onStartReview,
                 modifier = Modifier.weight(1f)
@@ -74,7 +74,7 @@ fun HomeScreen(
             StatCard(
                 icon = Icons.Default.MenuBook,
                 value = viewModel.learningCount,
-                title = "学习中",
+                title = "Learning",
                 color = AppColors.StatLearning,
                 onClick = { onNavigateVocabulary("learning") },
                 modifier = Modifier.weight(1f)
@@ -82,7 +82,7 @@ fun HomeScreen(
             StatCard(
                 icon = Icons.Default.CheckCircle,
                 value = viewModel.masteredCount,
-                title = "已掌握",
+                title = "Mastered",
                 color = AppColors.StatMastered,
                 onClick = { onNavigateVocabulary("mastered") },
                 modifier = Modifier.weight(1f)
@@ -93,7 +93,7 @@ fun HomeScreen(
 
         // Start review button
         GradientButton(
-            text = "开始复习",
+            text = "Start Review",
             onClick = onStartReview,
             enabled = viewModel.dueCount > 0
         )
@@ -102,7 +102,7 @@ fun HomeScreen(
 
         // Sync button
         SecondaryButton(
-            text = if (isLoading) "同步中..." else "同步 Gist",
+            text = if (isLoading) "Syncing..." else "Sync Gist",
             onClick = { viewModel.syncGist() },
             enabled = !isLoading
         )
@@ -111,7 +111,7 @@ fun HomeScreen(
 
         // Sync timestamp
         Text(
-            text = lastSyncAt?.let { "上次同步: $it" } ?: "尚未同步",
+            text = lastSyncAt?.let { "Last synced: $it" } ?: "Not synced yet",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )

@@ -2,12 +2,12 @@ function syncStateText(state) {
   if (!state) return '';
   const at = state.at ? state.at.slice(0, 16).replace('T', ' ') : '';
   switch (state.code) {
-    case 'created':   return `✓ 已自动创建新词库 Gist（${at}）`;
-    case 'updated':   return `✓ 已同步（${at}）`;
-    case 'pulled':    return `✓ 已从远端拉取（${at}）`;
-    case 'forbidden': return `✗ GitHub Token 无效或缺少 gist 权限（${at}）`;
-    case 'error':     return `✗ 同步失败：${state.error || '未知错误'}（${at}）`;
-    default:          return state.ok ? `✓ 已同步（${at}）` : `✗ ${state.error || '同步失败'}（${at}）`;
+    case 'created':   return `✓ Vocabulary Gist created automatically (${at})`;
+    case 'updated':   return `✓ Synced (${at})`;
+    case 'pulled':    return `✓ Pulled from remote (${at})`;
+    case 'forbidden': return `✗ Invalid GitHub token or missing gist permission (${at})`;
+    case 'error':     return `✗ Sync failed: ${state.error || 'Unknown error'} (${at})`;
+    default:          return state.ok ? `✓ Synced (${at})` : `✗ ${state.error || 'Sync failed'} (${at})`;
   }
 }
 
@@ -23,8 +23,8 @@ async function load() {
   const gistInfo = document.getElementById('gistInfo');
   const parts = [];
   if (gistId) {
-    parts.push(`<a href="https://gist.github.com/${gistId}" target="_blank">在 GitHub 查看词库 ↗</a>`);
-    parts.push(`最后同步: ${lastGistSync ? lastGistSync.slice(0, 16).replace('T', ' ') : '从未'}`);
+    parts.push(`<a href="https://gist.github.com/${gistId}" target="_blank">View vocabulary on GitHub ↗</a>`);
+    parts.push(`Last synced: ${lastGistSync ? lastGistSync.slice(0, 16).replace('T', ' ') : 'Never'}`);
   }
   const stateText = syncStateText(lastSyncState);
   if (stateText) {
@@ -48,30 +48,30 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
   const gistId = document.getElementById('gistId').value.trim();
 
   await chrome.storage.local.set({ deepseekApiKey, githubToken, gistId });
-  showStatus('✓ 设置已保存');
+  showStatus('✓ Settings saved');
 });
 
 document.getElementById('syncBtn').addEventListener('click', async () => {
-  showStatus('同步中...');
+  showStatus('Syncing...');
   try {
     const result = await chrome.runtime.sendMessage({ type: 'PULL_GIST' });
     if (result?.ok) {
-      const msg = result.code === 'created' ? '✓ 已自动创建词库 Gist' : '✓ 拉取成功';
+      const msg = result.code === 'created' ? '✓ Vocabulary Gist created automatically' : '✓ Pull successful';
       showStatus(msg);
     } else {
-      showStatus(`✗ ${result?.error || '同步失败'}`, true);
+      showStatus(`✗ ${result?.error || 'Sync failed'}`, true);
     }
-    load(); // 刷新 Gist ID 和同步时间
+    load(); // Refresh Gist ID and sync timestamp
   } catch (e) {
-    showStatus('✗ 拉取失败，请检查 Token 和 Gist ID', true);
+    showStatus('✗ Pull failed. Check your token and Gist ID.', true);
   }
 });
 
 document.getElementById('clearBtn').addEventListener('click', async () => {
-  if (!confirm('确定清空本地词库？此操作不可撤销。')) return;
+  if (!confirm('Clear local vocabulary? This cannot be undone.')) return;
   await chrome.storage.local.set({ words: {} });
   chrome.action.setBadgeText({ text: '' });
-  showStatus('✓ 已清空');
+  showStatus('✓ Cleared');
 });
 
 load();

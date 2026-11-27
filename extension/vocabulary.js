@@ -16,24 +16,24 @@ function render() {
 
   let entries = Object.entries(allWords);
 
-  // 过滤状态
+  // Filter by status
   if (currentFilter !== 'all') {
     entries = entries.filter(([, w]) => w.status === currentFilter);
   }
 
-  // 搜索
+  // Search
   if (searchQuery) {
     entries = entries.filter(([word]) => word.includes(searchQuery.toLowerCase()));
   }
 
-  // 按更新时间倒序（无更新时间则用加入时间）
+  // Sort by most recent update (fall back to added time)
   entries.sort((a, b) => {
     const ta = b[1].lastSeen || b[1].firstSeen || '';
     const tb = a[1].lastSeen || a[1].firstSeen || '';
     return ta.localeCompare(tb);
   });
 
-  // 更新统计栏
+  // Update statistics
   const allLearning = Object.values(allWords).filter(w => w.status === 'learning').length;
   document.getElementById('learningCount').textContent = allLearning;
 
@@ -44,8 +44,8 @@ function render() {
   if (total === 0) {
     list.innerHTML = `
       <div class="empty">
-        <h2>${searchQuery ? '没有匹配的单词' : '还没有单词'}</h2>
-        <p>${searchQuery ? '换个关键词试试' : '浏览英文网页，点击单词加入生词本'}</p>
+        <h2>${searchQuery ? 'No Matching Words' : 'No Words Yet'}</h2>
+        <p>${searchQuery ? 'Try a different search term.' : 'Browse English web pages and click words to save them to your vocabulary.'}</p>
       </div>
     `;
     renderPagination(0, 0);
@@ -62,9 +62,9 @@ function render() {
         <div class="word-header">
           <span class="word-text">${word}</span>
           <span class="word-phonetic">${info.phonetic || ''}</span>
-          <span class="badge ${info.status}">${info.status === 'learning' ? '学习中' : '已掌握'}</span>
+          <span class="badge ${info.status}">${info.status === 'learning' ? 'Learning' : 'Mastered'}</span>
         </div>
-        <div class="word-def">${info.definition || '<span style="color:#585b70">暂无释义</span>'}</div>
+        <div class="word-def">${info.definition || '<span style="color:#585b70">No definition yet</span>'}</div>
         <div class="word-contexts">
           ${(info.contexts || []).slice(0, 2).map(c => {
             const urlDisplay = c.url ? (() => { try { return new URL(c.url).hostname; } catch { return c.url.slice(0, 40); } })() : '';
@@ -74,26 +74,26 @@ function render() {
             </div>`;
           }).join('')}
         </div>
-        <div class="word-meta">加入：${info.firstSeen || '未知'} · 更新：${info.lastSeen || info.firstSeen || '未知'}</div>
+        <div class="word-meta">Added: ${info.firstSeen || 'Unknown'} · Updated: ${info.lastSeen || info.firstSeen || 'Unknown'}</div>
       </div>
       <div class="word-actions">
         ${info.status === 'mastered'
-          ? `<button class="action-btn learn" data-action="learning" data-word="${word}">重新学习</button>`
-          : `<button class="action-btn master" data-action="mastered" data-word="${word}">标记已掌握</button>`
+          ? `<button class="action-btn learn" data-action="learning" data-word="${word}">Relearn</button>`
+          : `<button class="action-btn master" data-action="mastered" data-word="${word}">Mark as Mastered</button>`
         }
-        <button class="action-btn delete" data-action="delete" data-word="${word}">删除</button>
+        <button class="action-btn delete" data-action="delete" data-word="${word}">Delete</button>
       </div>
     </div>
   `).join('');
 
-  // 事件委托
+  // Event delegation
   list.querySelectorAll('[data-action]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const action = btn.dataset.action;
       const word = btn.dataset.word;
 
       if (action === 'delete') {
-        if (!confirm(`删除 "${word}"？`)) return;
+        if (!confirm(`Delete "${word}"?`)) return;
         await chrome.runtime.sendMessage({ type: 'DELETE_WORD', word });
         await load();
       } else {
@@ -114,9 +114,9 @@ function renderPagination(total, totalPages) {
     return;
   }
   container.innerHTML = `
-    <button class="page-btn" id="pagePrev" ${currentPage <= 1 ? 'disabled' : ''}>‹ 上一页</button>
-    <span class="page-info">第 ${currentPage} / ${totalPages} 页 · 共 ${total} 条</span>
-    <button class="page-btn" id="pageNext" ${currentPage >= totalPages ? 'disabled' : ''}>下一页 ›</button>
+    <button class="page-btn" id="pagePrev" ${currentPage <= 1 ? 'disabled' : ''}>‹ Previous</button>
+    <span class="page-info">Page ${currentPage} / ${totalPages} · ${total} words</span>
+    <button class="page-btn" id="pageNext" ${currentPage >= totalPages ? 'disabled' : ''}>Next ›</button>
   `;
   document.getElementById('pagePrev').addEventListener('click', () => {
     if (currentPage > 1) { currentPage--; render(); window.scrollTo(0, 0); }
@@ -144,7 +144,7 @@ function renderStats() {
   }
 
   Object.values(allWords).forEach(w => {
-    // firstSeen 格式为 "2026-04-17 10:30"，取前 10 位得到日期部分
+    // firstSeen uses the format "2026-04-17 10:30"; take the first 10 characters for the date.
     const date = (w.firstSeen || '').slice(0, 10);
     if (date && counts[date] !== undefined) counts[date]++;
   });
@@ -174,7 +174,7 @@ function highlightWord(sentence, word) {
   const result = escaped.replace(re, '<mark class="word-highlight">$1</mark>');
   if (result !== escaped) return result;
 
-  // 多词短语在例句中可能不连续出现，逐词高亮
+  // Words in multi-word phrases may be non-contiguous in the example; highlight each word.
   if (word.includes(' ') || word.includes('...') || word.includes('…')) {
     const parts = word.split(/[\s.…]+/).filter(Boolean);
     let highlighted = escaped;
@@ -188,7 +188,7 @@ function highlightWord(sentence, word) {
   return result;
 }
 
-// ── 事件绑定 ───────────────────────────────────────────────────────────────
+// ── Event bindings ───────────────────────────────────────────────────────────────
 
 document.getElementById('search').addEventListener('input', e => {
   searchQuery = e.target.value.trim();
@@ -216,7 +216,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 load();
 
-// 监听外部 storage 变化（Gist 同步等）
+// Listen for external storage changes (Gist sync, etc.)
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.words) load();
 });

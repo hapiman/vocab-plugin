@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vocab Learner 设置</title>
+  <title>Vocab Learner Settings</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -70,39 +70,39 @@
   </style>
 </head>
 <body>
-  <h1>⚙️ Vocab Learner 设置</h1>
+  <h1>⚙️ Vocab Learner Settings</h1>
 
   <div class="section">
     <h2>DeepSeek API Key</h2>
-    <label>用于查询单词释义和翻译</label>
+    <label>Used for word definitions and translations</label>
     <input type="password" id="deepseekKey" placeholder="sk-..." />
-    <div class="hint">前往 <a href="https://platform.deepseek.com" target="_blank" style="color:#89b4fa">platform.deepseek.com</a> 获取</div>
+    <div class="hint">Get a key at <a href="https://platform.deepseek.com" target="_blank" style="color:#89b4fa">platform.deepseek.com</a></div>
   </div>
 
   <div class="section">
-    <h2>GitHub 同步</h2>
-    <label>Personal Access Token（需要 gist 权限）</label>
+    <h2>GitHub Sync</h2>
+    <label>Personal Access Token (requires gist permission)</label>
     <input type="password" id="githubToken" placeholder="ghp_..." />
-    <div class="hint">前往 GitHub → Settings → Developer settings → Personal access tokens → 勾选 gist</div>
+    <div class="hint">Go to GitHub → Settings → Developer settings → Personal access tokens → Select gist</div>
 
     <br/>
-    <label style="margin-top:12px">Gist ID（首次留空，自动创建；已有 Gist 可填入）</label>
-    <input type="text" id="gistId" placeholder="留空则自动创建" />
+    <label style="margin-top:12px">Gist ID (leave blank to create automatically, or enter an existing Gist)</label>
+    <input type="text" id="gistId" placeholder="Leave blank to create automatically" />
     <div class="gist-info" id="gistInfo"></div>
   </div>
 
   <div style="margin-top: 16px;">
-    <button class="btn btn-primary" id="saveBtn">保存设置</button>
-    <button class="btn btn-secondary" id="syncBtn">立即从 Gist 拉取</button>
+    <button class="btn btn-primary" id="saveBtn">Save Settings</button>
+    <button class="btn btn-secondary" id="syncBtn">Pull from Gist Now</button>
     <span class="status" id="statusMsg" style="display:none"></span>
   </div>
 
   <hr/>
 
   <div class="section danger-zone">
-    <h2>危险操作</h2>
-    <button class="btn btn-danger" id="clearBtn">清空本地词库</button>
-    <div class="hint" style="margin-top:8px">清空后无法恢复（如果有 Gist 可重新拉取）</div>
+    <h2>Danger Zone</h2>
+    <button class="btn btn-danger" id="clearBtn">Clear Local Vocabulary</button>
+    <div class="hint" style="margin-top:8px">This cannot be undone (you can restore from an existing Gist).</div>
   </div>
 
   <script src="settings.js"></script>

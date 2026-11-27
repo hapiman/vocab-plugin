@@ -27,7 +27,7 @@ final class VocabularyViewController: UITableViewController, UISearchResultsUpda
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = mode == .learning ? "词库" : "已掌握"
+        title = mode == .learning ? "Vocabulary" : "Mastered"
         view.backgroundColor = Theme.Colors.pageBackground
         setupNavigation()
         setupSearch()
@@ -92,7 +92,7 @@ final class VocabularyViewController: UITableViewController, UISearchResultsUpda
     private func setupNavigation() {
         guard mode == .learning else { return }
         let item = UIBarButtonItem(
-            title: "已掌握",
+            title: "Mastered",
             style: .plain,
             target: self,
             action: #selector(openMasteredWords)
@@ -104,9 +104,9 @@ final class VocabularyViewController: UITableViewController, UISearchResultsUpda
     private func setupSearch() {
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = mode == .learning ? "搜索全部词库" : "搜索已掌握"
+        searchController.searchBar.placeholder = mode == .learning ? "Search all vocabulary" : "Search mastered words"
         searchController.automaticallyShowsCancelButton = true
-        searchController.searchBar.setValue("取消", forKey: "cancelButtonText")
+        searchController.searchBar.setValue("Cancel", forKey: "cancelButtonText")
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
@@ -158,11 +158,11 @@ final class VocabularyViewController: UITableViewController, UISearchResultsUpda
 
         let emptyView = EmptyStateView()
         if !query.isEmpty {
-            emptyView.configure(title: "没有找到单词", message: "换个关键词，或检查该词是否已经同步到 Gist。")
+            emptyView.configure(title: "No Words Found", message: "Try another search term or check whether the word has been synced to Gist.")
         } else if mode == .learning {
-            emptyView.configure(title: "暂无学习中的词", message: "PC 浏览器扩展收词后，会出现在这里。")
+            emptyView.configure(title: "No Words to Learn", message: "Words saved by the desktop browser extension will appear here.")
         } else {
-            emptyView.configure(title: "暂无已掌握单词", message: "在复习或词条详情中标记已掌握后，会出现在这里。")
+            emptyView.configure(title: "No Mastered Words Yet", message: "Words marked as mastered during review or in word details will appear here.")
         }
         tableView.backgroundView = emptyView
     }
@@ -190,11 +190,11 @@ final class VocabularyViewController: UITableViewController, UISearchResultsUpda
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard mode == .mastered else { return nil }
         let word = entries[indexPath.row].0
-        let delete = UIContextualAction(style: .destructive, title: "删除") { [weak self] _, _, completion in
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completion in
             guard let self else { completion(false); return }
-            let alert = UIAlertController(title: "删除单词", message: "确定要删除「\(word)」吗？此操作不可撤销。", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "取消", style: .cancel) { _ in completion(false) })
-            alert.addAction(UIAlertAction(title: "删除", style: .destructive) { _ in
+            let alert = UIAlertController(title: "Delete Word", message: "Delete \(word)? This cannot be undone.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completion(false) })
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
                 self.store.deleteWord(word)
                 self.entries.remove(at: indexPath.row)
                 tableView.deleteRows(at: [indexPath], with: .automatic)
@@ -238,11 +238,11 @@ private final class VocabWordCell: UITableViewCell {
         indexLabel.text = "\(index)"
         wordLabel.text = word
 
-        let definition = info.definition?.isEmpty == false ? info.definition! : "暂无释义"
+        let definition = info.definition?.isEmpty == false ? info.definition! : "No definition yet"
         definitionLabel.text = definition
 
         let isMastered = info.status == "mastered"
-        statusBadge.text = isMastered ? "已掌握" : "学习中"
+        statusBadge.text = isMastered ? "Mastered" : "Learning"
         statusBadge.textColor = isMastered ? Theme.Colors.statMastered : Theme.Colors.statLearning
         statusBadge.backgroundColor = (isMastered ? Theme.Colors.statMastered : Theme.Colors.statLearning).withAlphaComponent(0.1)
     }

@@ -20,7 +20,7 @@ fun StatusBadge(status: String?, modifier: Modifier = Modifier) {
     val bgColor = if (isLearning) AppColors.StatLearning.copy(alpha = 0.12f)
     else AppColors.StatMastered.copy(alpha = 0.12f)
     val textColor = if (isLearning) AppColors.StatLearning else AppColors.StatMastered
-    val label = if (isLearning) "学习中" else "已掌握"
+    val label = if (isLearning) "Learning" else "Mastered"
 
     Box(
         modifier = modifier

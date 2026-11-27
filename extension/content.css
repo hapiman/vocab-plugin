@@ -1,4 +1,4 @@
-/* 生词下划线 */
+/* Vocabulary underlines */
 .vocab-word {
   cursor: pointer;
   text-decoration: underline;
@@ -17,9 +17,9 @@
   text-decoration-color: #3b82f6;
 }
 
-/* 选中文字触发图标 */
+/* Icon triggered by text selection */
 .vocab-selection-icon {
-  position: absolute;
+  position: fixed;
   z-index: 2147483647;
   height: 28px;
   min-width: 32px;
@@ -47,11 +47,16 @@
   background: #313244;
 }
 
-/* 弹窗 */
+/* Popup */
 .vocab-popup {
-  position: absolute;
+  position: fixed;
   z-index: 2147483647;
   width: 300px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   background: #1e1e2e;
   color: #cdd6f4;
   border-radius: 10px;
@@ -74,6 +79,32 @@
   gap: 8px;
   padding: 12px 14px 8px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.vocab-popup-header,
+.vocab-popup-src {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.vocab-popup-header::before,
+.vocab-popup-src::before {
+  content: '⠿';
+  color: #a6adc8;
+  font-size: 16px;
+  font-style: normal;
+}
+
+.vocab-popup-src::before {
+  float: right;
+  margin-left: 8px;
+}
+
+.vocab-popup-dragging .vocab-popup-header,
+.vocab-popup-dragging .vocab-popup-src {
+  cursor: grabbing;
 }
 
 .vocab-popup-word {
@@ -106,6 +137,7 @@
 .vocab-popup-body {
   padding: 10px 14px;
   min-height: 48px;
+  overflow-y: auto;
 }
 
 .vocab-popup-definition {
@@ -134,6 +166,7 @@
 
 .vocab-popup-actions {
   display: flex;
+  flex-shrink: 0;
   gap: 8px;
   padding: 8px 14px 12px;
 }
@@ -188,12 +221,12 @@
   padding-bottom: 4px;
 }
 
-/* 翻译弹窗（更宽）*/
+/* Translation popup (wider)*/
 .vocab-popup-translate {
   width: 360px;
 }
 
-/* 句子翻译弹窗 */
+/* Sentence translation popup */
 .vocab-popup-src {
   padding: 10px 14px 8px;
   font-size: 12px;

@@ -19,11 +19,11 @@ class HomeViewModel : ViewModel() {
         get() {
             val hour = LocalTime.now().hour
             return when {
-                hour < 6 -> "夜深了"
-                hour < 12 -> "早上好"
-                hour < 14 -> "中午好"
-                hour < 18 -> "下午好"
-                else -> "晚上好"
+                hour < 6 -> "Up late?"
+                hour < 12 -> "Good morning"
+                hour < 14 -> "Good afternoon"
+                hour < 18 -> "Good afternoon"
+                else -> "Good evening"
             }
         }
 

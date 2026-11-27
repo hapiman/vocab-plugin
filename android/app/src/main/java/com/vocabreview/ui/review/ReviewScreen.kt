@@ -50,7 +50,7 @@ fun ReviewScreen(
                 title = { Text(viewModel.progress) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -59,8 +59,8 @@ fun ReviewScreen(
         if (viewModel.isQueueEmpty) {
             EmptyState(
                 icon = Icons.Default.Celebration,
-                title = "全部复习完毕",
-                message = "今天的复习任务已完成，继续保持！",
+                title = "Review Complete",
+                message = "You have completed today's reviews. Keep it up!",
                 modifier = Modifier.padding(padding)
             )
             return@Scaffold
@@ -149,7 +149,7 @@ fun ReviewScreen(
 
             // Toggle mastered button
             SecondaryButton(
-                text = if (currentWord.second.status == "mastered") "重新学习" else "标记已掌握",
+                text = if (currentWord.second.status == "mastered") "Relearn" else "Mark as Mastered",
                 onClick = { viewModel.toggleMastered() }
             )
 
@@ -157,7 +157,7 @@ fun ReviewScreen(
 
             // Hint
             Text(
-                text = "点击卡片翻转 · 左右滑动切换",
+                text = "Tap to flip · Swipe to switch",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                 textAlign = TextAlign.Center
@@ -188,7 +188,7 @@ private fun MasteredOverlay() {
             )
             Spacer(Modifier.height(Spacing.sm))
             Text(
-                text = "已掌握",
+                text = "Mastered",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = AppColors.StatMastered

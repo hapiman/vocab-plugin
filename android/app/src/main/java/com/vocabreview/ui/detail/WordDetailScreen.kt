@@ -43,10 +43,10 @@ fun WordDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("详情") },
+                title = { Text("Details") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -54,7 +54,7 @@ fun WordDetailScreen(
     ) { padding ->
         if (vocabWord == null) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("单词不存在")
+                Text("Word not found")
             }
             return@Scaffold
         }
@@ -91,10 +91,10 @@ fun WordDetailScreen(
 
             // Definition card
             DetailCard {
-                SectionHeader(icon = Icons.Default.MenuBook, title = "释义")
+                SectionHeader(icon = Icons.Default.MenuBook, title = "Definition")
                 Spacer(Modifier.height(Spacing.sm))
                 Text(
-                    text = vocabWord.definition ?: "暂无释义",
+                    text = vocabWord.definition ?: "No definition yet",
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -105,7 +105,7 @@ fun WordDetailScreen(
             // Context card
             if (!vocabWord.contexts.isNullOrEmpty()) {
                 DetailCard {
-                    SectionHeader(icon = Icons.Default.FormatQuote, title = "例句")
+                    SectionHeader(icon = Icons.Default.FormatQuote, title = "Example Sentence")
                     vocabWord.contexts?.forEachIndexed { idx, ctx ->
                         if (idx > 0) Spacer(Modifier.height(Spacing.md))
                         Spacer(Modifier.height(Spacing.sm))
@@ -132,26 +132,26 @@ fun WordDetailScreen(
 
             // Info card
             DetailCard {
-                SectionHeader(icon = Icons.Default.Info, title = "信息")
+                SectionHeader(icon = Icons.Default.Info, title = "Information")
                 Spacer(Modifier.height(Spacing.sm))
-                InfoRow("加入", vocabWord.firstSeen ?: "未知")
-                InfoRow("更新", vocabWord.lastSeen ?: vocabWord.firstSeen ?: "未知")
-                InfoRow("复习", "${vocabWord.reviewCount ?: 0} 次")
-                InfoRow("到期", DateCoding.formatDueDisplay(vocabWord.dueAt))
+                InfoRow("Added", vocabWord.firstSeen ?: "Unknown")
+                InfoRow("Updated", vocabWord.lastSeen ?: vocabWord.firstSeen ?: "Unknown")
+                InfoRow("Review", "${vocabWord.reviewCount ?: 0} times")
+                InfoRow("Due", DateCoding.formatDueDisplay(vocabWord.dueAt))
             }
 
             Spacer(Modifier.height(Spacing.xxl))
 
             // Actions
             GradientButton(
-                text = if (vocabWord.status == "mastered") "重新学习" else "标记已掌握",
+                text = if (vocabWord.status == "mastered") "Relearn" else "Mark as Mastered",
                 onClick = { viewModel.toggleStatus(word) }
             )
 
             Spacer(Modifier.height(Spacing.md))
 
             SecondaryButton(
-                text = "设为今天复习",
+                text = "Review Today",
                 onClick = { viewModel.setDueToday(word) },
                 enabled = vocabWord.status != "mastered"
             )

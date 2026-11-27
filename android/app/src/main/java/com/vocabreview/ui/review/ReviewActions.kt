@@ -42,21 +42,21 @@ fun ReviewActions(
     ) {
         ActionButton(
             icon = Icons.Default.Close,
-            label = "忘了",
+            label = "Forgot",
             color = AppColors.StatDue,
             onClick = onMiss,
             modifier = Modifier.weight(1f)
         )
         ActionButton(
             icon = Icons.Default.Help,
-            label = "模糊",
+            label = "Hard",
             color = Color(0xFFF5A623),
             onClick = onHard,
             modifier = Modifier.weight(1f)
         )
         ActionButton(
             icon = Icons.Default.CheckCircle,
-            label = "记得",
+            label = "Got It",
             color = AppColors.StatMastered,
             onClick = onGood,
             modifier = Modifier.weight(1f)

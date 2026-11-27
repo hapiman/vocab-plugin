@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>复习 - Vocab Learner</title>
+  <title>Review - Vocab Learner</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -518,38 +518,38 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>复习</h1>
+    <h1>Review</h1>
     <div class="top-metrics">
       <div class="metric">
         <span class="metric-value" id="dueCount">-</span>
-        <span class="metric-label">当前待复习</span>
+        <span class="metric-label">Due Now</span>
       </div>
       <div class="metric">
         <span class="metric-value" id="doneCount">-</span>
-        <span class="metric-label">已完成</span>
+        <span class="metric-label">Completed</span>
       </div>
       <div class="metric">
         <span class="metric-value" id="accuracy">-</span>
-        <span class="metric-label">记住率</span>
+        <span class="metric-label">Recall Rate</span>
       </div>
     </div>
   </header>
 
   <main class="shell">
-    <section class="review-panel" aria-label="复习卡片">
+    <section class="review-panel" aria-label="Review Card">
       <div class="review-header">
         <div class="progress-wrap">
           <div class="progress-meta">
-            <span id="progressText">加载中</span>
-            <span id="nextDueText">答完后会安排下次复习</span>
+            <span id="progressText">Loading</span>
+            <span id="nextDueText">The next review will be scheduled after your answer.</span>
           </div>
           <div class="progress-track">
             <div class="progress-bar" id="progressBar"></div>
           </div>
         </div>
-        <div class="mode-switch" aria-label="复习模式" id="modeSwitch">
-          <button class="active" type="button" data-mode="card">卡片</button>
-          <button type="button" data-mode="sentence">例句</button>
+        <div class="mode-switch" aria-label="Review Mode" id="modeSwitch">
+          <button class="active" type="button" data-mode="card">Flashcard</button>
+          <button type="button" data-mode="sentence">Example Sentence</button>
         </div>
       </div>
 
@@ -563,63 +563,63 @@
           <span class="tag level" id="levelTag"></span>
           <button class="tag source tag-link" id="sourceTag" type="button"></button>
         </div>
-        <p class="prompt" id="promptText">先在脑子里回忆这个词的含义，再显示答案。</p>
+        <p class="prompt" id="promptText">Recall the meaning of this word before revealing the answer.</p>
         <div class="context" id="contextText"></div>
 
         <div class="answer" id="answerBlock">
           <div class="answer-grid">
             <div>
-              <h2>释义</h2>
+              <h2>Definition</h2>
               <div class="definition" id="definitionText"></div>
               <div class="example-zh" id="exampleZh"></div>
             </div>
             <div class="notes">
-              <h2>上下文</h2>
+              <h2>Context</h2>
               <div class="notes-list" id="notesList"></div>
             </div>
           </div>
         </div>
 
         <div class="empty-state" id="emptyState">
-          <h2 id="emptyTitle">今天没有待复习词</h2>
-          <p id="emptyMessage">新增或重新学习的词会自动进入复习队列。旧词如果还没有复习时间，会在第一次打开时被视为今天到期。</p>
+          <h2 id="emptyTitle">No Words Due Today</h2>
+          <p id="emptyMessage">New words and words you relearn enter the review queue automatically. Older words without a review date are considered due today when first opened.</p>
         </div>
       </div>
 
       <div class="review-actions">
         <div class="secondary-actions">
-          <button class="action" type="button" id="skipBtn">稍后</button>
-          <button class="action" type="button" id="masterBtn">已掌握</button>
+          <button class="action" type="button" id="skipBtn">Later</button>
+          <button class="action" type="button" id="masterBtn">Mastered</button>
         </div>
-        <button class="action primary" type="button" id="showBtn">显示答案</button>
+        <button class="action primary" type="button" id="showBtn">Show Answer</button>
         <div class="rating-actions" id="ratingActions">
-          <button class="rating miss" type="button" data-score="miss">忘了</button>
-          <button class="rating hard" type="button" data-score="hard">模糊</button>
-          <button class="rating good" type="button" data-score="good">记住了</button>
+          <button class="rating miss" type="button" data-score="miss">Forgot</button>
+          <button class="rating hard" type="button" data-score="hard">Hard</button>
+          <button class="rating good" type="button" data-score="good">Got It</button>
         </div>
       </div>
     </section>
 
     <aside class="side">
-      <section class="queue-panel" aria-label="待复习队列">
-        <h2>队列</h2>
-        <input class="queue-search" id="queueSearch" type="search" placeholder="搜索学习中的词..." />
+      <section class="queue-panel" aria-label="Review Queue">
+        <h2>Queue</h2>
+        <input class="queue-search" id="queueSearch" type="search" placeholder="Search words you are learning..." />
         <div class="queue-list" id="queueList"></div>
         <div class="queue-pagination" id="queuePagination">
-          <button class="queue-page-btn" type="button" id="queuePrev">上一页</button>
-          <span class="queue-page-info" id="queuePageInfo">第 1 / 1 页</span>
-          <button class="queue-page-btn" type="button" id="queueNext">下一页</button>
+          <button class="queue-page-btn" type="button" id="queuePrev">Previous</button>
+          <span class="queue-page-info" id="queuePageInfo">Page 1 / 1</span>
+          <button class="queue-page-btn" type="button" id="queueNext">Next</button>
         </div>
         <div class="toast" id="toast"></div>
       </section>
 
-      <section class="summary-panel" aria-label="复习安排">
-        <h2>复习安排</h2>
+      <section class="summary-panel" aria-label="Review Schedule">
+        <h2>Review Schedule</h2>
         <div class="plan-list">
-          <div class="plan-row"><span>今天</span><span class="plan-count" id="planToday">-</span></div>
-          <div class="plan-row"><span>明天</span><span class="plan-count" id="planTomorrow">-</span></div>
-          <div class="plan-row"><span>本周</span><span class="plan-count" id="planWeek">-</span></div>
-          <div class="plan-row"><span>已稳定掌握</span><span class="plan-count" id="planStable">-</span></div>
+          <div class="plan-row"><span>Today</span><span class="plan-count" id="planToday">-</span></div>
+          <div class="plan-row"><span>Tomorrow</span><span class="plan-count" id="planTomorrow">-</span></div>
+          <div class="plan-row"><span>This Week</span><span class="plan-count" id="planWeek">-</span></div>
+          <div class="plan-row"><span>Mastered</span><span class="plan-count" id="planStable">-</span></div>
         </div>
       </section>
     </aside>

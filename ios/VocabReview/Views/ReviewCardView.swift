@@ -27,12 +27,12 @@ final class ReviewCardView: UIView {
         wordLabel.text = word
         phoneticLabel.text = info.phonetic
 
-        let sentence = info.latestSentence.isEmpty ? "没有保存例句。" : info.latestSentence
+        let sentence = info.latestSentence.isEmpty ? "No example sentence saved." : info.latestSentence
         let highlighted = Self.highlightWord(word, in: sentence)
         contextLabel.attributedText = highlighted
         backContextLabel.attributedText = highlighted
 
-        definitionLabel.text = info.definition?.isEmpty == false ? info.definition : "暂无释义。"
+        definitionLabel.text = info.definition?.isEmpty == false ? info.definition : "No definition yet."
 
         // Show mastered state
         let isMastered = info.status == "mastered"
@@ -114,7 +114,7 @@ final class ReviewCardView: UIView {
     }
 
     private func setupMasteredBadge() {
-        masteredBadge.text = " \u{2713} 已掌握 "
+        masteredBadge.text = " \u{2713} Mastered "
         masteredBadge.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
         masteredBadge.textColor = Theme.Colors.statMastered
         masteredBadge.backgroundColor = Theme.Colors.statMastered.withAlphaComponent(0.12)
@@ -142,7 +142,7 @@ final class ReviewCardView: UIView {
         phoneticLabel.textColor = Theme.Colors.subtleText
 
         let contextTitleLabel = UILabel()
-        contextTitleLabel.text = "例句"
+        contextTitleLabel.text = "Example Sentence"
         contextTitleLabel.font = Theme.Font.caption
         contextTitleLabel.textColor = Theme.Colors.subtleText.withAlphaComponent(0.7)
 
@@ -189,7 +189,7 @@ final class ReviewCardView: UIView {
         backWordLabel.textColor = .label
         backWordLabel.numberOfLines = 0
 
-        definitionTitleLabel.text = "释义"
+        definitionTitleLabel.text = "Definition"
         definitionTitleLabel.font = Theme.Font.caption
         definitionTitleLabel.textColor = Theme.Colors.subtleText.withAlphaComponent(0.7)
 
@@ -203,7 +203,7 @@ final class ReviewCardView: UIView {
 
         // Reuse context on back too
         let backContextTitle = UILabel()
-        backContextTitle.text = "例句"
+        backContextTitle.text = "Example Sentence"
         backContextTitle.font = Theme.Font.caption
         backContextTitle.textColor = Theme.Colors.subtleText.withAlphaComponent(0.7)
 
