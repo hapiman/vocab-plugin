@@ -1,7 +1,7 @@
 // Background Service Worker
-// 负责：DeepSeek API 调用、存储管理、Gist 同步
+// Handles DeepSeek API calls, storage management, and Gist sync
 
-// ── 串行写队列：防止并发 read-modify-write 互相覆盖 ─────────────────────────
+// ── Serialized write queue: prevent concurrent read-modify-write operations from overwriting each other ─────────────────────────
 
 const writeQueue = [];
 let writeRunning = false;
@@ -22,14 +22,14 @@ async function drainWriteQueue() {
   drainWriteQueue();
 }
 
-// ── Gist 同步 ──────────────────────────────────────────────────────────────
+// ── Gist sync ──────────────────────────────────────────────────────────────
 
 const GIST_SYNC_ALARM = 'gist-sync';
 
-// 用 chrome.alarms 做 5 秒防抖：alarms 能跨 MV3 service worker 回收存活，
-// 避免保存单词后 worker 被回收、setTimeout 随之丢失导致同步从不触发。
+// Debounce by 5 seconds using chrome.alarms, which survive MV3 service worker termination.
+// This prevents sync from being missed when the worker is terminated after saving a word and setTimeout is lost.
 function scheduleGistSync() {
-  // 重复 create 同名 alarm 会覆盖上一个，天然实现防抖。
+  // Creating an alarm with the same name replaces the previous one, providing built-in debouncing.
   chrome.alarms.create(GIST_SYNC_ALARM, { when: Date.now() + 5000 });
 }
 
@@ -38,14 +38,14 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === GIST_SYNC_ALARM) syncToGist();
 });
 
-// 记录最近一次同步结果，供设置页 / popup 读取展示。
+// Store the most recent sync result for display in settings and the popup.
 async function recordSyncState(state) {
   await chrome.storage.local.set({
     lastSyncState: { ...state, at: new Date().toISOString() }
   });
 }
 
-// 在 GitHub 创建一个新的私有 Gist，写回 gistId。
+// Create a new secret Gist on GitHub and store its gistId.
 async function createGist(githubToken, content) {
   const res = await fetch('https://api.github.com/gists', {
     method: 'POST',
@@ -54,7 +54,7 @@ async function createGist(githubToken, content) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      description: 'Vocab Learner - 个人词库',
+      description: 'Vocab Learner - Personal Vocabulary',
       public: false,
       files: { 'vocab-learner.json': { content } }
     })
@@ -79,7 +79,7 @@ async function syncToGist() {
     let created = false;
 
     if (gistId) {
-      // 更新已有 Gist
+      // Update existing Gist
       const res = await fetch(`https://api.github.com/gists/${gistId}`, {
         method: 'PATCH',
         headers: {
@@ -92,12 +92,12 @@ async function syncToGist() {
       });
 
       if (res.status === 404 || res.status === 422) {
-        // 远端 gist 已被删除 / 无法访问 → 清掉失效 id，回退到创建分支。
+        // Remote Gist deleted or inaccessible: clear the invalid ID and fall back to creation.
         await chrome.storage.local.remove('gistId');
         await createGist(githubToken, content);
         created = true;
       } else if (res.status === 401 || res.status === 403) {
-        // token 无效或缺少 gist 权限 → 重建也会失败，如实报错。
+        // Invalid token or missing gist permission: recreation would also fail, so report the error.
         const err = new Error(`GitHub API ${res.status}`);
         err.status = res.status;
         throw err;
@@ -107,7 +107,7 @@ async function syncToGist() {
         throw err;
       }
     } else {
-      // 本地没有 gistId → 创建新 Gist
+      // No local gistId: create a new Gist
       await createGist(githubToken, content);
       created = true;
     }
@@ -120,7 +120,7 @@ async function syncToGist() {
     console.error('Gist sync failed:', e);
     const code = (e.status === 401 || e.status === 403) ? 'forbidden' : 'error';
     const error = code === 'forbidden'
-      ? 'GitHub Token 无效或缺少 gist 权限'
+      ? 'Invalid GitHub token or missing gist permission'
       : e.message;
     await recordSyncState({ ok: false, code, error });
     return { ok: false, code, error };
@@ -159,7 +159,7 @@ function mergePulledWords(remoteWords, localWords) {
       continue;
     }
 
-    // 远端可能包含 iOS 刚写入的复习字段；本地只补充浏览器端可能新增的释义和例句。
+    // The remote may contain recent iOS review fields; only supplement definitions and examples added by the browser.
     merged[word] = {
       ...remoteInfo,
       firstSeen: remoteInfo.firstSeen || localInfo.firstSeen,
@@ -177,10 +177,10 @@ async function pullFromGist(options = {}) {
   const { githubToken, gistId, words: localWords } = await chrome.storage.local.get(['githubToken', 'gistId', 'words']);
 
   if (!githubToken) {
-    return { ok: false, code: 'no-token', error: '请先在设置页填写 GitHub Token', stats: statsFromWords(localWords) };
+    return { ok: false, code: 'no-token', error: 'Enter your GitHub token in Settings first.', stats: statsFromWords(localWords) };
   }
 
-  // 本地无 gistId（新账号）或远端 404（已删除）→ 自动创建新 Gist。
+  // No local gistId (new account) or remote 404 (deleted): create a new Gist automatically.
   let needCreate = !gistId;
 
   try {
@@ -202,7 +202,7 @@ async function pullFromGist(options = {}) {
 
         const content = data.files?.['vocab-learner.json']?.content;
         if (!content) {
-          return { ok: false, code: 'no-file', error: 'Gist 中没有 vocab-learner.json', stats: statsFromWords(localWords) };
+          return { ok: false, code: 'no-file', error: 'Gist does not contain vocab-learner.json', stats: statsFromWords(localWords) };
         }
 
         const remoteWords = JSON.parse(content);
@@ -215,7 +215,7 @@ async function pullFromGist(options = {}) {
       }
     }
 
-    // 走到这里说明需要创建新 Gist。
+    // Reaching this point means a new Gist must be created.
     const newId = await createGist(githubToken, JSON.stringify(localWords || {}, null, 2));
     const lastGistSync = new Date().toISOString();
     await chrome.storage.local.set({ lastGistSync });
@@ -225,7 +225,7 @@ async function pullFromGist(options = {}) {
     console.error('Gist pull failed:', e);
     const forbidden = e.status === 401 || e.status === 403;
     const code = forbidden ? 'forbidden' : 'error';
-    const error = forbidden ? 'GitHub Token 无效或缺少 gist 权限' : e.message;
+    const error = forbidden ? 'Invalid GitHub token or missing gist permission' : e.message;
     await recordSyncState({ ok: false, code, error });
     return { ok: false, code: 'error', error: e.message, stats: statsFromWords(localWords) };
   }
@@ -236,7 +236,7 @@ async function pullFromGist(options = {}) {
 async function callDeepSeek(messages, maxTokens) {
   const { deepseekApiKey } = await chrome.storage.local.get('deepseekApiKey');
   if (!deepseekApiKey) {
-    return { error: '请先在设置页填入 DeepSeek API Key' };
+    return { error: 'Enter your DeepSeek API key in Settings first.' };
   }
 
   let res;
@@ -248,9 +248,9 @@ async function callDeepSeek(messages, maxTokens) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        // deepseek-chat 已于 2026-07-24 下线，需使用 v4 模型
+        // deepseek-chat was retired on 2026-07-24; use a v4 model.
         model: 'deepseek-v4-flash',
-        // 词典/翻译场景无需推理，关闭 thinking 以降低延迟与成本（v4 默认开启）
+        // Dictionary and translation tasks do not require reasoning; disable thinking to reduce latency and cost (enabled by default in v4).
         thinking: { type: 'disabled' },
         max_tokens: maxTokens,
         messages,
@@ -258,15 +258,15 @@ async function callDeepSeek(messages, maxTokens) {
     });
   } catch (e) {
     console.error('[VocabLearner] fetch failed:', e);
-    return { error: `网络请求失败: ${e.message}` };
+    return { error: `Network request failed: ${e.message}` };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     console.error('[VocabLearner] API error:', res.status, body);
-    if (res.status === 401) return { error: 'API Key 无效，请在设置页重新填入' };
-    if (res.status === 429) return { error: '请求过于频繁，稍后再试' };
-    return { error: `API 返回错误 ${res.status}` };
+    if (res.status === 401) return { error: 'Invalid API key. Re-enter it in Settings.' };
+    if (res.status === 429) return { error: 'Too many requests. Try again later.' };
+    return { error: `API returned error ${res.status}` };
   }
 
   const data = await res.json();
@@ -276,17 +276,17 @@ async function callDeepSeek(messages, maxTokens) {
 async function getDefinition(word, context) {
   const { deepseekApiKey } = await chrome.storage.local.get('deepseekApiKey');
   if (!deepseekApiKey) {
-    return { error: '请先在设置页填入 DeepSeek API Key' };
+    return { error: 'Enter your DeepSeek API key in Settings first.' };
   }
 
   const contextLine = context
-    ? `该词出现在以下句子中：\n"${context}"\n请结合此句意思给出最贴切的释义。\n`
+    ? `The word appears in this sentence:\n"${context}"\nProvide the most appropriate definition for this context.\n`
     : '';
 
   const result = await callDeepSeek([{
     role: 'user',
-    content: `你是英文词典助手。${contextLine}请为单词 "${word}" 返回 JSON，格式如下，除 JSON 外不要输出任何其他内容：
-{"phonetic":"/音标/","definition":"词性+结合语境的中文释义","example":"直接引用或改写上面的例句"}`
+    content: `You are an English dictionary assistant. ${contextLine}Return only JSON for the word "${word}" in the following format:
+{"phonetic":"/phonetic transcription/","definition":"Part of speech and Chinese definition appropriate to the context","example":"Quote or adapt the example sentence above"}`
   }], 300);
 
   if (result.error) return result;
@@ -301,26 +301,26 @@ async function getDefinition(word, context) {
   }
 }
 
-// ── 翻译 ───────────────────────────────────────────────────────────────────
+// ── Translation ───────────────────────────────────────────────────────────────────
 
 async function translateText(text, context) {
   const { deepseekApiKey } = await chrome.storage.local.get('deepseekApiKey');
-  if (!deepseekApiKey) return { error: '请先填入 DeepSeek API Key' };
+  if (!deepseekApiKey) return { error: 'Enter your DeepSeek API key first.' };
 
-  const contextLine = context ? `上下文参考（仅用于理解语境，不需要翻译）：\n"${context}"\n\n` : '';
+  const contextLine = context ? `Reference context (for understanding only; do not translate):\n"${context}"\n\n` : '';
   const isLong = text.split(/\s+/).length >= 5;
 
   const prompt = isLong
-    ? `${contextLine}请将以下英文翻译成中文，要求：
-1. 译文自然流畅，符合中文表达习惯，不要逐字直译
-2. 专有名词、产品名、品牌名保留英文原文
-3. 技术术语优先使用业界通行译法
-4. 只返回 JSON，不要 markdown 代码块：
-{"translation":"译文","phrases":[{"en":"值得注意的短语或术语（直接摘自原句）","zh":"简短解释"}]}
-phrases 只收录 3~5 个对理解句意有帮助的关键短语或术语，不需要翻译每个词。
+    ? `${contextLine}Translate the following English text into Chinese using these guidelines:
+1. Use natural, fluent Chinese phrasing rather than literal word-for-word translation.
+2. Keep proper nouns, product names, and brand names in the original English.
+3. Prefer established industry translations for technical terms.
+4. Return only JSON, without Markdown code fences:
+{"translation":"Translation","phrases":[{"en":"Noteworthy phrase or term taken directly from the source sentence","zh":"Brief Chinese explanation"}]}
+Include only 3-5 key phrases or terms that help explain the sentence; do not translate every word.
 
-原文："${text}"`
-    : `${contextLine}将以下英文翻译成自然流畅的中文，只输出译文，不加任何解释：\n"${text}"`;
+Source text: "${text}"`
+    : `${contextLine}Translate the following English text into natural, fluent Chinese. Output only the translation without explanation:\n"${text}"`;
 
   const result = await callDeepSeek([{ role: 'user', content: prompt }], 600);
 
@@ -338,9 +338,9 @@ phrases 只收录 3~5 个对理解句意有帮助的关键短语或术语，不�
   return { translation: result.text.trim(), phrases: [] };
 }
 
-// ── 存储操作 ───────────────────────────────────────────────────────────────
+// ── Storage operations ───────────────────────────────────────────────────────────────
 
-// 释义临时缓存：GET_DEFINITION 返回时单词可能还没被 MARK_WORD 存入 storage
+// Temporary definition cache: GET_DEFINITION may return before MARK_WORD saves the word to storage.
 // key: word, value: { definition, phonetic }
 const pendingDefs = new Map();
 
@@ -466,7 +466,7 @@ async function reviewWord(word, outcome) {
       info.lastReviewed = now.toISOString();
       wordMap[word] = info;
       await chrome.storage.local.set({ words: wordMap });
-      return { ok: true, wordMap, nextDueText: '已掌握' };
+      return { ok: true, wordMap, nextDueText: 'Mastered' };
     }
 
     info.status = 'learning';
@@ -476,7 +476,7 @@ async function reviewWord(word, outcome) {
       info.dueAt = addMinutes(now, 240);
       wordMap[word] = info;
       await chrome.storage.local.set({ words: wordMap });
-      return { ok: true, wordMap, nextDueText: '4 小时后' };
+      return { ok: true, wordMap, nextDueText: 'in 4 hours' };
     }
 
     info.reviewCount = Number(info.reviewCount || 0) + 1;
@@ -487,16 +487,16 @@ async function reviewWord(word, outcome) {
       info.missCount = Number(info.missCount || 0) + 1;
       info.intervalDays = 0;
       info.dueAt = addMinutes(now, 10);
-      nextDueText = '10 分钟后';
+      nextDueText = 'in 10 minutes';
     } else if (outcome === 'hard') {
       info.intervalDays = 1;
       info.dueAt = addDays(now, 1);
-      nextDueText = '明天';
+      nextDueText = 'Tomorrow';
     } else {
       info.correctCount = Number(info.correctCount || 0) + 1;
       info.intervalDays = nextGoodIntervalDays(info.correctCount);
       info.dueAt = addDays(now, info.intervalDays);
-      nextDueText = `${info.intervalDays} 天后`;
+      nextDueText = `in ${info.intervalDays} ${info.intervalDays === 1 ? 'day' : 'days'}`;
     }
 
     wordMap[word] = info;
@@ -511,7 +511,7 @@ async function reviewWord(word, outcome) {
   return { ok: result.ok, error: result.error, nextDueText: result.nextDueText };
 }
 
-// ── 消息监听 ───────────────────────────────────────────────────────────────
+// ── Message listener ───────────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   switch (msg.type) {
@@ -523,7 +523,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       getDefinition(msg.word, msg.context).then(async (def) => {
         if (!def.error) {
           const saved = await saveDefinition(msg.word, def);
-          if (!saved) pendingDefs.set(msg.word, def); // 单词尚未标记，先缓存
+          if (!saved) pendingDefs.set(msg.word, def); // Word not marked yet; cache it first
         }
         sendResponse(def);
       });
@@ -586,7 +586,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return true;
 
     case 'PULL_GIST':
-      // 打开 popup 时优先拉远端，避免用浏览器本地旧状态覆盖 iOS 刚写入的复习进度。
+      // Pull remote data when opening the popup to avoid overwriting recent iOS review progress with stale browser state.
       (async () => {
         const hadPendingSync = Boolean(await chrome.alarms.get(GIST_SYNC_ALARM));
         if (hadPendingSync) {
@@ -603,6 +603,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
-// 插件安装/启动时从 Gist 拉取最新词库
+// Pull the latest vocabulary from Gist on extension installation or startup.
 chrome.runtime.onStartup.addListener(pullFromGist);
 chrome.runtime.onInstalled.addListener(pullFromGist);

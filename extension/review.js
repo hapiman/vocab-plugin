@@ -26,7 +26,7 @@ function isDue(info) {
 
 function hostFromContexts(info) {
   const url = latestUrl(info);
-  if (!url) return '本地词库';
+  if (!url) return 'Local Vocabulary';
   try {
     return new URL(url).hostname;
   } catch {
@@ -51,20 +51,21 @@ function escapeRegExp(text) {
 }
 
 function formatDueTag(info) {
-  if (!info.dueAt) return '已到期';
+  if (!info.dueAt) return 'Due';
   const due = parseDue(info.dueAt);
   const diffMs = due - Date.now();
-  if (diffMs <= 0) return '已到期';
+  if (diffMs <= 0) return 'Due';
   const diffMinutes = Math.ceil(diffMs / 60000);
-  if (diffMinutes < 60) return `${diffMinutes} 分钟后`;
+  if (diffMinutes < 60) return `in ${diffMinutes} min`;
   const diffHours = Math.ceil(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} 小时后`;
-  return `${Math.ceil(diffHours / 24)} 天后`;
+  if (diffHours < 24) return `in ${diffHours} hr`;
+  const diffDays = Math.ceil(diffHours / 24);
+  return `in ${diffDays} ${diffDays === 1 ? 'day' : 'days'}`;
 }
 
 function formatReviewLevel(info) {
   const count = Number(info.reviewCount || 0);
-  return count > 0 ? `第 ${count} 次复习` : '未复习';
+  return count > 0 ? `Review ${count}` : 'Not Reviewed';
 }
 
 function formatDateMinute(value) {
@@ -196,19 +197,19 @@ function render() {
   el('levelTag').textContent = formatReviewLevel(info);
   el('sourceTag').textContent = hostFromContexts(info);
   el('sourceTag').disabled = !currentSourceUrl;
-  el('sourceTag').title = currentSourceUrl ? '打开来源网页' : '没有保存来源网页';
+  el('sourceTag').title = currentSourceUrl ? 'Open source page' : 'No source page saved';
   el('promptText').textContent = mode === 'card'
-    ? '先在脑子里回忆这个词的含义，再显示答案。'
-    : '根据例句回忆空缺词，再显示答案。';
+    ? 'Recall the meaning of this word before revealing the answer.'
+    : 'Recall the missing word from the example sentence before revealing the answer.';
   el('contextText').textContent = formatPromptSentence(word, sentence);
-  el('definitionText').textContent = info.definition || '暂无释义。可以先凭上下文回忆，之后在网页里重新查询。';
+  el('definitionText').textContent = info.definition || 'No definition yet. Recall it from context, then look it up again on the web page.';
   el('exampleZh').textContent = '';
   el('exampleZh').style.display = 'none';
   renderNotes(info);
 }
 
 function formatPromptSentence(word, sentence) {
-  if (!sentence) return '没有保存例句。';
+  if (!sentence) return 'No example sentence saved.';
   if (mode === 'card') return sentence;
   const re = new RegExp(escapeRegExp(word), 'ig');
   return sentence.replace(re, '____');
@@ -217,10 +218,10 @@ function formatPromptSentence(word, sentence) {
 function renderNotes(info) {
   const contexts = (info.contexts || []).slice(-3).reverse();
   const meta = [
-    ['加入', formatDateMinute(info.firstSeen) || '未知'],
-    ['最近出现', formatDateMinute(info.lastSeen) || '未知']
+    ['Added', formatDateMinute(info.firstSeen) || 'Unknown'],
+    ['Last Seen', formatDateMinute(info.lastSeen) || 'Unknown']
   ];
-  const contextRows = contexts.map(context => ['例句', context.sentence || '']);
+  const contextRows = contexts.map(context => ['Example Sentence', context.sentence || '']);
   const rows = [...contextRows, ...meta].filter(([, value]) => value);
   el('notesList').innerHTML = rows.map(([label, value]) => (
     `<div class="note-item"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span></div>`
@@ -234,35 +235,35 @@ function renderMetrics() {
   el('doneCount').textContent = doneCount;
   el('accuracy').textContent = doneCount === 0 ? '-' : `${Math.round((rememberedCount / doneCount) * 100)}%`;
   el('progressText').textContent = dueCount
-    ? `第 ${Math.min(doneCount + 1, total)} / ${total} 个`
+    ? `${Math.min(doneCount + 1, total)} / ${total} words`
     : doneCount > 0
-      ? `已完成 ${doneCount} 个`
+      ? `Completed ${doneCount} words`
       : queue.length > 0
-        ? '没有到期词'
-        : '没有待复习词';
+        ? 'No Words Due'
+        : 'No Words to Review';
   el('progressBar').style.width = total > 0 ? `${Math.min((doneCount / total) * 100, 100)}%` : '0%';
   el('nextDueText').textContent = dueCount
-    ? '答完后会安排下次复习'
+    ? 'The next review will be scheduled after your answer.'
     : queue.length > 0
-      ? '可以从右侧选择提前复习'
-      : '可以回到生词本继续添加';
+      ? 'Choose a word on the right to review early.'
+      : 'Return to your vocabulary to add more words.';
 }
 
 function renderEmptyState() {
   if (queue.length === 0) {
-    el('emptyTitle').textContent = '暂无学习中的词';
-    el('emptyMessage').textContent = '把网页里的单词加入生词本后，会自动进入复习队列。';
+    el('emptyTitle').textContent = 'No Words to Learn';
+    el('emptyMessage').textContent = 'Words saved from web pages enter the review queue automatically.';
     return;
   }
 
-  el('emptyTitle').textContent = '没有匹配的词';
-  el('emptyMessage').textContent = '调整右侧搜索关键词，或清空搜索后继续选择要复习的词。';
+  el('emptyTitle').textContent = 'No Matching Words';
+  el('emptyMessage').textContent = 'Adjust or clear the search on the right to choose words to review.';
 }
 
 function renderQueue() {
   if (queue.length === 0) {
     queuePage = 1;
-    el('queueList').innerHTML = '<div class="queue-item"><span class="queue-word">暂无学习中的词</span><span class="queue-time">完成</span></div>';
+    el('queueList').innerHTML = '<div class="queue-item"><span class="queue-word">No Words to Learn</span><span class="queue-time">Done</span></div>';
     renderQueuePagination(1);
     return;
   }
@@ -270,7 +271,7 @@ function renderQueue() {
   const visible = getVisibleQueue();
   if (visible.length === 0) {
     queuePage = 1;
-    el('queueList').innerHTML = '<div class="queue-item"><span class="queue-word">没有匹配的词</span><span class="queue-time">搜索</span></div>';
+    el('queueList').innerHTML = '<div class="queue-item"><span class="queue-word">No Matching Words</span><span class="queue-time">Search</span></div>';
     renderQueuePagination(1);
     return;
   }
@@ -287,7 +288,7 @@ function renderQueue() {
     return (
     `<button class="queue-item ${active ? 'active' : ''}" type="button" data-word="${escapeHtml(item.word)}">
       <span class="queue-word">${escapeHtml(item.word)}</span>
-      <span class="queue-time">${active ? '当前' : formatDueTag(item.info)}</span>
+      <span class="queue-time">${active ? 'Current' : formatDueTag(item.info)}</span>
     </button>`
     );
   }).join('');
@@ -295,7 +296,7 @@ function renderQueue() {
 }
 
 function renderQueuePagination(totalPages) {
-  el('queuePageInfo').textContent = `第 ${queuePage} / ${totalPages} 页`;
+  el('queuePageInfo').textContent = `Page ${queuePage} / ${totalPages}`;
   el('queuePrev').disabled = queuePage <= 1;
   el('queueNext').disabled = queuePage >= totalPages;
 }
@@ -319,7 +320,7 @@ async function complete(outcome) {
   setBusy(false);
 
   if (!result?.ok) {
-    toastText = `保存失败：${result?.error || '未知错误'}`;
+    toastText = `Save failed: ${result?.error || 'Unknown error'}`;
     render();
     return;
   }
@@ -327,8 +328,8 @@ async function complete(outcome) {
   doneCount += 1;
   if (outcome === 'good' || outcome === 'mastered') rememberedCount += 1;
   toastText = outcome === 'mastered'
-    ? `${current.word} 已标记为已掌握`
-    : `${current.word} 已安排到 ${result.nextDueText}`;
+    ? `${current.word} marked as mastered`
+    : `${current.word}: next review ${result.nextDueText}`;
   queuePage = 1;
   selectedWord = '';
   await loadData(false);

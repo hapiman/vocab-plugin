@@ -144,30 +144,30 @@ enum GistClientError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingGistId:
-            return "Gist ID 为空，请填写 Gist ID 或完整 Gist 链接。"
+            return "Enter a Gist ID or full Gist URL."
         case .invalidURL(let gistId):
-            return "Gist ID 格式不正确：\(gistId)"
+            return "Invalid Gist ID format: \(gistId)"
         case .invalidResponse:
-            return "GitHub 返回了无效响应。"
+            return "GitHub returned an invalid response."
         case .invalidContent:
-            return "词库 JSON 编码失败。"
+            return "Failed to encode vocabulary JSON."
         case .httpStatus(let statusCode, let message):
             return httpMessage(statusCode: statusCode, message: message)
         }
     }
 
     private func httpMessage(statusCode: Int, message: String) -> String {
-        let detail = message.isEmpty ? "" : "：\(message)"
+        let detail = message.isEmpty ? "" : ": \(message)"
 
         switch statusCode {
         case 401:
-            return "GitHub Token 无效或已过期\(detail)"
+            return "GitHub token is invalid or expired\(detail)"
         case 403:
-            return "GitHub 拒绝访问，请确认 Token 具有 gist 权限\(detail)"
+            return "GitHub denied access. Ensure your token has gist permission\(detail)"
         case 404:
-            return "找不到这个 Gist，请确认 Gist ID 正确，且 Token 有权限访问私有 Gist\(detail)"
+            return "Gist not found. Check that the Gist ID is correct and the token can access the secret Gist\(detail)"
         default:
-            return "GitHub API 返回错误 \(statusCode)\(detail)"
+            return "GitHub API returned error \(statusCode)\(detail)"
         }
     }
 }

@@ -15,7 +15,7 @@ final class SettingsViewController: UIViewController {
 
     private func setupViews() {
         let titleLabel = UILabel()
-        titleLabel.text = "GitHub 同步设置"
+        titleLabel.text = "GitHub Sync Settings"
         titleLabel.font = Theme.Font.title
         titleLabel.textColor = .label
 
@@ -24,7 +24,7 @@ final class SettingsViewController: UIViewController {
         gistIdField.keyboardType = .URL
 
         let saveButton = GradientButton(type: .system)
-        saveButton.setTitle("  保存设置", for: .normal)
+        saveButton.setTitle("  Save Settings", for: .normal)
         saveButton.setImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
         Theme.applyPrimaryStyle(to: saveButton)
         saveButton.addTarget(self, action: #selector(saveSettings), for: .touchUpInside)
@@ -32,7 +32,7 @@ final class SettingsViewController: UIViewController {
         saveButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
 
         let pullButton = UIButton(type: .system)
-        pullButton.setTitle("  从 Gist 拉取", for: .normal)
+        pullButton.setTitle("  Pull from Gist", for: .normal)
         pullButton.setImage(UIImage(systemName: "arrow.down.circle.fill"), for: .normal)
         Theme.applySecondaryStyle(to: pullButton)
         pullButton.addTarget(self, action: #selector(pullGist), for: .touchUpInside)
@@ -121,17 +121,17 @@ final class SettingsViewController: UIViewController {
             gistId: gistIdField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         )
         gistIdField.text = store.loadCredentials().gistId
-        statusLabel.text = store.lastError ?? "设置已保存"
+        statusLabel.text = store.lastError ?? "Settings saved"
         statusLabel.textColor = store.lastError != nil ? .systemRed : Theme.Colors.statMastered
     }
 
     @objc private func pullGist() {
         saveSettings()
-        statusLabel.text = "同步中..."
+        statusLabel.text = "Syncing..."
         statusLabel.textColor = Theme.Colors.subtleText
         Task {
             await store.pullFromGist()
-            statusLabel.text = store.lastError ?? "拉取成功"
+            statusLabel.text = store.lastError ?? "Pull successful"
             statusLabel.textColor = store.lastError != nil ? .systemRed : Theme.Colors.statMastered
         }
     }

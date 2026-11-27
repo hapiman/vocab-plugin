@@ -9,19 +9,19 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
         viewControllers = [
             makeNavigationController(
                 root: HomeViewController(),
-                title: "复习",
+                title: "Review",
                 icon: "rectangle.stack.fill",
                 inactiveIcon: "rectangle.stack"
             ),
             makeNavigationController(
                 root: VocabularyViewController(),
-                title: "词库",
+                title: "Vocabulary",
                 icon: "book.fill",
                 inactiveIcon: "book"
             ),
             makeNavigationController(
                 root: SettingsViewController(),
-                title: "设置",
+                title: "Settings",
                 icon: "gearshape.fill",
                 inactiveIcon: "gearshape"
             )

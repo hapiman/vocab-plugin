@@ -1,9 +1,9 @@
 import UMCommon
 
-/// 轻量埋点封装，统一管理事件 ID
+/// Lightweight analytics wrapper with centralized event IDs
 enum Analytics {
 
-    // MARK: - 事件 ID
+    // MARK: - Event IDs
 
     static let appOpen = "app_open"
     static let reviewStart = "review_start"
@@ -12,7 +12,7 @@ enum Analytics {
     static let wordDetailView = "word_detail_view"
     static let syncPull = "sync_pull"
 
-    // MARK: - 上报
+    // MARK: - Reporting
 
     static func event(_ eventId: String) {
         MobClick.event(eventId)

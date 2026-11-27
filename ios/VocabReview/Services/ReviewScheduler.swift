@@ -29,7 +29,7 @@ enum ReviewScheduler {
         if outcome == .mastered {
             updated.status = "mastered"
             updated.lastReviewed = DateCoding.isoString(now)
-            return ReviewResult(word: updated, nextDueText: "已掌握")
+            return ReviewResult(word: updated, nextDueText: "Mastered")
         }
 
         updated.status = "learning"
@@ -38,20 +38,20 @@ enum ReviewScheduler {
         switch outcome {
         case .skip:
             updated.dueAt = DateCoding.isoString(now.addingTimeInterval(4 * 60 * 60))
-            return ReviewResult(word: updated, nextDueText: "4 小时后")
+            return ReviewResult(word: updated, nextDueText: "in 4 hours")
         case .miss:
             updated.reviewCount = (updated.reviewCount ?? 0) + 1
             updated.missCount = (updated.missCount ?? 0) + 1
             updated.intervalDays = 0
             updated.lastReviewed = DateCoding.isoString(now)
             updated.dueAt = DateCoding.isoString(now.addingTimeInterval(10 * 60))
-            return ReviewResult(word: updated, nextDueText: "10 分钟后")
+            return ReviewResult(word: updated, nextDueText: "in 10 minutes")
         case .hard:
             updated.reviewCount = (updated.reviewCount ?? 0) + 1
             updated.intervalDays = 1
             updated.lastReviewed = DateCoding.isoString(now)
             updated.dueAt = DateCoding.isoString(now.addingTimeInterval(24 * 60 * 60))
-            return ReviewResult(word: updated, nextDueText: "明天")
+            return ReviewResult(word: updated, nextDueText: "Tomorrow")
         case .good:
             updated.reviewCount = (updated.reviewCount ?? 0) + 1
             updated.correctCount = (updated.correctCount ?? 0) + 1
@@ -59,9 +59,9 @@ enum ReviewScheduler {
             updated.intervalDays = interval
             updated.lastReviewed = DateCoding.isoString(now)
             updated.dueAt = DateCoding.isoString(now.addingTimeInterval(TimeInterval(interval * 24 * 60 * 60)))
-            return ReviewResult(word: updated, nextDueText: "\(interval) 天后")
+            return ReviewResult(word: updated, nextDueText: "in \(interval) \(interval == 1 ? "day" : "days")")
         case .mastered:
-            return ReviewResult(word: updated, nextDueText: "已掌握")
+            return ReviewResult(word: updated, nextDueText: "Mastered")
         }
     }
 

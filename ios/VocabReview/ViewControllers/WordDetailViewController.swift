@@ -76,9 +76,9 @@ final class WordDetailViewController: UIViewController {
 
         // Cards
         let headerCard = makeCard(content: makeHeaderContent(wordLabel: wordLabel))
-        let definitionCard = makeCard(content: makeSection(title: "释义", icon: "text.book.closed.fill", contentView: definitionLabel))
-        let contextCard = makeCard(content: makeSection(title: "例句", icon: "quote.bubble.fill", contentView: contextLabel))
-        let metaCard = makeCard(content: makeSection(title: "信息", icon: "info.circle.fill", contentView: metaLabel))
+        let definitionCard = makeCard(content: makeSection(title: "Definition", icon: "text.book.closed.fill", contentView: definitionLabel))
+        let contextCard = makeCard(content: makeSection(title: "Example Sentence", icon: "quote.bubble.fill", contentView: contextLabel))
+        let metaCard = makeCard(content: makeSection(title: "Information", icon: "info.circle.fill", contentView: metaLabel))
 
         // Action buttons
         Theme.applyPrimaryStyle(to: primaryButton)
@@ -177,32 +177,32 @@ final class WordDetailViewController: UIViewController {
 
     private func render() {
         guard let info = store.words[word] else {
-            statusBadge.text = "不存在"
+            statusBadge.text = "Not Found"
             primaryButton.isHidden = true
             secondaryButton.isHidden = true
             return
         }
 
         let isMastered = info.status == "mastered"
-        statusBadge.text = "  \(isMastered ? "已掌握" : "学习中")  "
+        statusBadge.text = "  \(isMastered ? "Mastered" : "Learning")  "
         statusBadge.textColor = isMastered ? Theme.Colors.statMastered : Theme.Colors.statLearning
         statusBadge.backgroundColor = (isMastered ? Theme.Colors.statMastered : Theme.Colors.statLearning).withAlphaComponent(0.12)
 
-        phoneticLabel.text = info.phonetic?.isEmpty == false ? info.phonetic : "无音标"
-        definitionLabel.text = info.definition?.isEmpty == false ? info.definition : "暂无释义"
-        contextLabel.text = info.latestSentence.isEmpty ? "没有保存例句。" : info.latestSentence
+        phoneticLabel.text = info.phonetic?.isEmpty == false ? info.phonetic : "No phonetic transcription"
+        definitionLabel.text = info.definition?.isEmpty == false ? info.definition : "No definition yet"
+        contextLabel.text = info.latestSentence.isEmpty ? "No example sentence saved." : info.latestSentence
 
         let dueText = formattedDue(info.dueAt)
         metaLabel.text = [
-            "加入：\(info.firstSeen ?? "未知")",
-            "更新：\(info.lastSeen ?? "未知")",
-            "复习：\(info.reviewCount ?? 0) 次",
+            "Added: \(info.firstSeen ?? "Unknown")",
+            "Updated: \(info.lastSeen ?? "Unknown")",
+            "Reviews: \(info.reviewCount ?? 0) times",
             dueText
         ].joined(separator: "\n")
 
-        primaryButton.setTitle(isMastered ? "重新学习" : "标记已掌握", for: .normal)
+        primaryButton.setTitle(isMastered ? "Relearn" : "Mark as Mastered", for: .normal)
 
-        secondaryButton.setTitle(isMastered ? "已掌握" : "设为今天复习", for: .normal)
+        secondaryButton.setTitle(isMastered ? "Mastered" : "Review Today", for: .normal)
         secondaryButton.setImage(isMastered ? nil : UIImage(systemName: "calendar.badge.clock"), for: .normal)
         secondaryButton.isEnabled = !isMastered
         secondaryButton.alpha = isMastered ? 0.45 : 1
@@ -210,14 +210,14 @@ final class WordDetailViewController: UIViewController {
 
     private func formattedDue(_ value: String?) -> String {
         guard let date = DateCoding.parseDue(value) else {
-            return "到期：已到期"
+            return "Due: Due"
         }
 
         if date <= Date() {
-            return "到期：已到期"
+            return "Due: Due"
         }
 
-        return "到期：\(DateCoding.localMinuteString(date))"
+        return "Due: \(DateCoding.localMinuteString(date))"
     }
 
     // MARK: - Actions
@@ -226,10 +226,10 @@ final class WordDetailViewController: UIViewController {
         guard let info = store.words[word] else { return }
         if info.status == "mastered" {
             store.updateStatus(word: word, status: "learning")
-            statusMessageLabel.text = "已重新加入学习队列"
+            statusMessageLabel.text = "Added back to the learning queue"
         } else {
             store.updateStatus(word: word, status: "mastered")
-            statusMessageLabel.text = "已标记为已掌握"
+            statusMessageLabel.text = "Marked as mastered"
         }
         animateStatusMessage()
         render()
@@ -237,7 +237,7 @@ final class WordDetailViewController: UIViewController {
 
     @objc private func secondaryAction() {
         store.updateStatus(word: word, status: "learning")
-        statusMessageLabel.text = "已安排为今天复习"
+        statusMessageLabel.text = "Scheduled for review today"
         animateStatusMessage()
         render()
     }

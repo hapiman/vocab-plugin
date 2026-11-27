@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Vocab Learner",
   "version": "1.0.0",
-  "description": "智能英文单词学习助手 - 标记生词，AI 释义，Gist 同步",
+  "description": "Smart English vocabulary assistant - mark words, AI definitions, Gist sync",
   "permissions": [
     "storage",
     "tabs",

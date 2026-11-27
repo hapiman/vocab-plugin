@@ -25,11 +25,11 @@ object GistClient {
     }
 
     sealed class GistError(message: String) : Exception(message) {
-        class Unauthorized : GistError("认证失败，请检查 Token")
-        class Forbidden : GistError("访问被拒绝 (403)")
-        class NotFound : GistError("Gist 不存在，请检查 ID")
-        class HttpError(code: Int) : GistError("HTTP 错误: $code")
-        class ParseError(msg: String) : GistError("解析失败: $msg")
+        class Unauthorized : GistError("Authentication failed. Check your token.")
+        class Forbidden : GistError("Access denied (403)")
+        class NotFound : GistError("Gist not found. Check the ID.")
+        class HttpError(code: Int) : GistError("HTTP error: $code")
+        class ParseError(msg: String) : GistError("Parsing failed: $msg")
     }
 
     suspend fun pull(token: String, gistId: String): VocabMap = withContext(Dispatchers.IO) {

@@ -49,7 +49,7 @@ final class VocabStore {
             words = try cache.load()
             lastError = nil
         } catch {
-            lastError = "读取本地缓存失败：\(error.localizedDescription)"
+            lastError = "Failed to read local cache: \(error.localizedDescription)"
         }
     }
 
@@ -61,7 +61,7 @@ final class VocabStore {
             UserDefaults.standard.set(normalizedGistId, forKey: gistIdKey)
             lastError = nil
         } catch {
-            lastError = "保存 Token 失败：\(error.localizedDescription)"
+            lastError = "Failed to save token: \(error.localizedDescription)"
         }
     }
 
@@ -74,7 +74,7 @@ final class VocabStore {
     func pullFromGist() async {
         let credentials = loadCredentials()
         guard !credentials.token.isEmpty, !credentials.gistId.isEmpty else {
-            lastError = "请先填写 GitHub Token 和 Gist ID"
+            lastError = "Enter your GitHub token and Gist ID first."
             return
         }
 
@@ -87,7 +87,7 @@ final class VocabStore {
             hasLocalReviewChanges = false
             Analytics.event(Analytics.syncPull, attributes: ["word_count": "\(remote.count)"])
         } catch {
-            lastError = "同步失败：\(error.localizedDescription)"
+            lastError = "Sync failed: \(error.localizedDescription)"
         }
     }
 
@@ -96,13 +96,13 @@ final class VocabStore {
         let result = ReviewScheduler.apply(outcome, to: current)
         words[word] = result.word
 
-        persistLocalReviewChanges(errorPrefix: "保存复习进度失败")
+        persistLocalReviewChanges(errorPrefix: "Failed to save review progress")
         return result.nextDueText
     }
 
     func deleteWord(_ word: String) {
         words.removeValue(forKey: word)
-        persistLocalReviewChanges(errorPrefix: "删除单词失败")
+        persistLocalReviewChanges(errorPrefix: "Failed to delete word")
     }
 
     func updateStatus(word: String, status: String) {
@@ -124,7 +124,7 @@ final class VocabStore {
         }
 
         words[word] = current
-        persistLocalReviewChanges(errorPrefix: "保存状态失败")
+        persistLocalReviewChanges(errorPrefix: "Failed to save status")
     }
 
     private func persistLocalReviewChanges(errorPrefix: String) {
@@ -135,7 +135,7 @@ final class VocabStore {
             lastError = nil
             pushReviewChangesInBackground()
         } catch {
-            lastError = "\(errorPrefix)：\(error.localizedDescription)"
+            lastError = "\(errorPrefix): \(error.localizedDescription)"
         }
     }
 
@@ -161,7 +161,7 @@ final class VocabStore {
 
         let credentials = loadCredentials()
         guard !credentials.token.isEmpty, !credentials.gistId.isEmpty else {
-            lastError = "请先填写 GitHub Token 和 Gist ID"
+            lastError = "Enter your GitHub token and Gist ID first."
             return
         }
 
@@ -188,7 +188,7 @@ final class VocabStore {
                     needsPushAfterCurrentPush = true
                 }
             } catch {
-                lastError = "上传复习进度失败：\(error.localizedDescription)"
+                lastError = "Failed to upload review progress: \(error.localizedDescription)"
                 return
             }
         } while needsPushAfterCurrentPush || hasLocalReviewChanges

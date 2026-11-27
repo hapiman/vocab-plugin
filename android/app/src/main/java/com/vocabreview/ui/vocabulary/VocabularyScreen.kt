@@ -30,11 +30,11 @@ fun VocabularyScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (mode == "mastered") "已掌握" else "词库") },
+                title = { Text(if (mode == "mastered") "Mastered" else "Vocabulary") },
                 actions = {
                     if (mode == "learning") {
                         TextButton(onClick = onNavigateMastered) {
-                            Text("已掌握")
+                            Text("Mastered")
                         }
                     }
                 }
@@ -53,7 +53,7 @@ fun VocabularyScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-                placeholder = { Text("搜索单词、释义...") },
+                placeholder = { Text("Search words or definitions...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium
@@ -62,9 +62,9 @@ fun VocabularyScreen(
             if (filteredWords.isEmpty()) {
                 EmptyState(
                     icon = Icons.Default.Book,
-                    title = if (viewModel.searchQuery.isNotBlank()) "没有匹配的单词" else "还没有单词",
-                    message = if (viewModel.searchQuery.isNotBlank()) "换个关键词试试"
-                    else "浏览英文网页，点击单词加入生词本"
+                    title = if (viewModel.searchQuery.isNotBlank()) "No Matching Words" else "No Words Yet",
+                    message = if (viewModel.searchQuery.isNotBlank()) "Try a different search term."
+                    else "Browse English web pages and click words to save them to your vocabulary."
                 )
             } else {
                 LazyColumn(
@@ -96,7 +96,7 @@ fun VocabularyScreen(
                                         contentAlignment = androidx.compose.ui.Alignment.CenterEnd
                                     ) {
                                         Text(
-                                            "删除",
+                                            "Delete",
                                             color = MaterialTheme.colorScheme.error
                                         )
                                     }

@@ -35,7 +35,7 @@ final class HomeViewController: UIViewController {
         greetingLabel.textColor = .label
 
         let subtitleLabel = UILabel()
-        subtitleLabel.text = "今天也要坚持复习哦"
+        subtitleLabel.text = "Keep up your daily review!"
         subtitleLabel.font = Theme.Font.callout
         subtitleLabel.textColor = Theme.Colors.subtleText
 
@@ -44,14 +44,14 @@ final class HomeViewController: UIViewController {
         headerStack.spacing = Theme.Spacing.xs
 
         // Start review button
-        startButton.setTitle("开始复习", for: .normal)
+        startButton.setTitle("Start Review", for: .normal)
         Theme.applyPrimaryStyle(to: startButton)
         startButton.addTarget(self, action: #selector(startReview), for: .touchUpInside)
         startButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
         startButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
 
         // Sync button
-        syncButton.setTitle("  同步 Gist", for: .normal)
+        syncButton.setTitle("  Sync Gist", for: .normal)
         syncButton.setImage(UIImage(systemName: "arrow.triangle.2.circlepath"), for: .normal)
         Theme.applySecondaryStyle(to: syncButton)
         syncButton.addTarget(self, action: #selector(syncGist), for: .touchUpInside)
@@ -107,9 +107,9 @@ final class HomeViewController: UIViewController {
         )
 
         if let lastSyncAt = store.lastSyncAt {
-            syncLabel.text = "最近同步：\(DateCoding.localMinuteString(lastSyncAt))"
+            syncLabel.text = "Last synced: \(DateCoding.localMinuteString(lastSyncAt))"
         } else {
-            syncLabel.text = "尚未同步。请在设置页填写 GitHub Token 和 Gist ID。"
+            syncLabel.text = "Not synced yet. Enter your GitHub token and Gist ID in Settings."
         }
         errorLabel.text = store.lastError
     }
@@ -117,10 +117,10 @@ final class HomeViewController: UIViewController {
     private func greetingText() -> String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 6..<12: return "早上好"
-        case 12..<14: return "中午好"
-        case 14..<18: return "下午好"
-        default: return "晚上好"
+        case 6..<12: return "Good morning"
+        case 12..<14: return "Good afternoon"
+        case 14..<18: return "Good afternoon"
+        default: return "Good evening"
         }
     }
 
